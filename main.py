@@ -4,6 +4,7 @@ import numpy as np
 cam = cv.VideoCapture(0)
 
 eps = 0.00001
+W, H = cam.get(cv.CAP_PROP_FRAME_WIDTH), cam.get(cv.CAP_PROP_FRAME_HEIGHT)
 
 def dist(p1, p2):
     return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
@@ -17,8 +18,14 @@ def topla(p1, p2):
 def carp(a, p):
     return (a*p[0], a*p[1])
 
-def abs(p):
+def length(p):
     return (p[0]**2 + p[1]**2)**0.5
+
+def area(l):
+    alan = 0
+    for i in range(0, len(l)):
+        alan += l[i][0]*l[i-1][1] - l[i-1][0]*l[i][1]
+    return abs(alan/2)
 
 while True:
     isTrue, raw = cam.read()
@@ -102,6 +109,8 @@ while True:
     # canny = cv.line(canny, (885, 200), (675, 342), (0, 255, 0), 3)
     # canny = cv.line(canny, (675, 571), (675, 342), (0, 255, 0), 3)
     # canny = cv.line(canny, (454, 211), (675, 342), (0, 255, 0), 3)
+    alan = area(pts)
+    print(alan)
 
     canny = cv.circle(canny, (675, 342), 30, (0, 0, 255))
     canny = cv.circle(canny, (675, 342), 50, (0, 0, 255))
@@ -146,12 +155,71 @@ while True:
 
         ax = (x3*(y4-y3)/(x4-x3) - x1*(y2-y1)/(x2-x1) + y1 - y3)/((y4-y3)/(x4-x3) - (y2-y1)/(x2-x1))
         ay = (ax-x1)*(y2-y1)/(x2-x1) + y1
+        center = int(ax), int(ay)
         if 0 < ax < 1000 and 0 < ay < 1000:
-            canny = cv.circle(canny, (int(ax), int(ay)), 5, (255, 255, 0), -1)
+            canny = cv.circle(canny, center, 5, (255, 255, 0), -1)
+        
+        canny_d = cv.dilate(canny, None)
+        canny_d = cv.dilate(canny_d, None)
+        canny_d = cv.dilate(canny_d, None)
+        canny_d = cv.dilate(canny_d, None)
+        canny_d = cv.dilate(canny_d, None)
 
-        kose0 = topla((ax, ay), carp(200/abs(cikar(p2[0], p1[0])), cikar(p2[0], p1[0])))
-        kose0 = int(kose0[0]), int(kose0[1])
-        canny = cv.circle(canny, kose0, 10, (0, 0, 255))
+        dx, dy = p2[0][0] - p1[0][0], p2[0][1] - p1[0][1]
+        dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
+        kx1, ky1 = p2[0][0], p2[0][1]
+        while 0 < kx1 < W and 0 < ky1 < H:
+            if canny_d[int(ky1), int(kx1)].all() == 0:
+                break
+            kx1 += dx
+            ky1 += dy
+        kx1 -= 5*dx
+        ky1 -= 5*dy
+
+        dx, dy = p2[1][0] - p1[1][0], p2[1][1] - p1[1][1]
+        dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
+        kx2, ky2 = p2[1][0], p2[1][1]
+        while 0 < kx2 < W and 0 < ky2 < H:
+            if canny_d[int(ky2), int(kx2)].all() == 0:
+                break
+            kx2 += dx
+            ky2 += dy
+        kx2 -= 5*dx
+        ky2 -= 5*dy
+
+        dx, dy = p2[2][0] - p1[2][0], p2[2][1] - p1[2][1]
+        dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
+        kx3, ky3 = p2[2][0], p2[2][1]
+        while 0 < kx3 < W and 0 < ky3 < H:
+            if canny_d[int(ky3), int(kx3)].all() == 0:
+                break
+            kx3 += dx
+            ky3 += dy
+        kx3 -= 5*dx
+        ky3 -= 5*dy
+
+        k1 = (int(kx1), int(ky1))
+        k2 = (int(kx2), int(ky2))
+        k3 = (int(kx3), int(ky3))
+
+        canny = cv.circle(canny, k1, 10, (0, 0, 255))
+        canny = cv.circle(canny, k2, 10, (0, 0, 255))
+        canny = cv.circle(canny, k3, 10, (0, 0, 255))
+
+        kk1 = topla(cikar(k1, center), k2)
+        kk2 = topla(cikar(k2, center), k3)
+        kk3 = topla(cikar(k3, center), k1)
+
+        canny = cv.circle(canny, kk1, 10, (0, 0, 255))
+        canny = cv.circle(canny, kk2, 10, (0, 0, 255))
+        canny = cv.circle(canny, kk3, 10, (0, 0, 255))
+
+        # cv.imshow('canny dilated', canny_d)
+
+
+        # kose0 = topla((ax, ay), carp(200/length(cikar(p2[0], p1[0])), cikar(p2[0], p1[0])))
+        # kose0 = int(kose0[0]), int(kose0[1])
+        # canny = cv.circle(canny, kose0, 10, (0, 0, 255))
         
     cv.imshow('canny', canny)
 
