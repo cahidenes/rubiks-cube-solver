@@ -1,5 +1,6 @@
 import cv2 as cv
 import numpy as np
+import random
 
 cam = cv.VideoCapture(0)
 
@@ -105,10 +106,10 @@ while True:
 
     pts.reshape((-1, 1, 2))
 
-    # canny = cv.polylines(canny, [pts], True, (0, 255, 0), 3)
-    # canny = cv.line(canny, (885, 200), (675, 342), (0, 255, 0), 3)
-    # canny = cv.line(canny, (675, 571), (675, 342), (0, 255, 0), 3)
-    # canny = cv.line(canny, (454, 211), (675, 342), (0, 255, 0), 3)
+    canny = cv.polylines(canny, [pts], True, (0, 255, 0), 3)
+    canny = cv.line(canny, (885, 200), (675, 342), (0, 255, 0), 3)
+    canny = cv.line(canny, (675, 571), (675, 342), (0, 255, 0), 3)
+    canny = cv.line(canny, (454, 211), (675, 342), (0, 255, 0), 3)
     alan = area(pts)
     print(alan)
 
@@ -210,9 +211,75 @@ while True:
         kk2 = topla(cikar(k2, center), k3)
         kk3 = topla(cikar(k3, center), k1)
 
-        canny = cv.circle(canny, kk1, 10, (0, 0, 255))
-        canny = cv.circle(canny, kk2, 10, (0, 0, 255))
-        canny = cv.circle(canny, kk3, 10, (0, 0, 255))
+        kk1 = cikar(kk1, carp(0.16, cikar(kk1, center)))
+        kk2 = cikar(kk2, carp(0.16, cikar(kk2, center)))
+        kk3 = cikar(kk3, carp(0.16, cikar(kk3, center)))
+        kk1 = (int(kk1[0]), int(kk1[1]))
+        kk2 = (int(kk2[0]), int(kk2[1]))
+        kk3 = (int(kk3[0]), int(kk3[1]))
+        
+        calculated_area = area([k1, kk1, k2, kk2, k3, kk3])
+
+        error = abs(calculated_area - alan)/alan
+
+        if error < 0.2:
+            canny = cv.circle(canny, kk1, 10, (0, 0, 255))
+            canny = cv.circle(canny, kk2, 10, (0, 0, 255))
+            canny = cv.circle(canny, kk3, 10, (0, 0, 255))
+
+            #* Faces
+            for faces in range(3):
+                if faces == 0:
+                    ax1 = cikar(k1, center)
+                    ax2 = cikar(k2, center)
+                elif faces == 1:
+                    ax1 = cikar(k2, center)
+                    ax2 = cikar(k3, center)
+                else:
+                    ax1 = cikar(k3, center)
+                    ax2 = cikar(k1, center)
+                # ax1 = topla(ax1, carp(0.16, cikar(ax1, center)))
+                # ax2 = topla(ax2, carp(0.16, cikar(ax2, center)))
+                for i in range(3):
+                    for j in range(3):
+                        b1 = topla(center, topla(carp( i   /3, ax1), carp( j   /3, ax2)))
+                        b2 = topla(center, topla(carp((i+1)/3, ax1), carp( j   /3, ax2)))
+                        b3 = topla(center, topla(carp( i   /3, ax1), carp((j+1)/3, ax2)))
+                        b4 = topla(center, topla(carp((i+1)/3, ax1), carp((j+1)/3, ax2)))
+
+                        b1 = cikar(b1, carp(0.16*min(i  , j  )/3, cikar(b1, center)))
+                        b2 = cikar(b2, carp(0.16*min(i+1, j  )/3, cikar(b2, center)))
+                        b3 = cikar(b3, carp(0.16*min(i  , j+1)/3, cikar(b3, center)))
+                        b4 = cikar(b4, carp(0.16*min(i+1, j+1)/3, cikar(b4, center)))
+
+                        mask = np.zeros(canny.shape, np.uint8)
+
+                        mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
+
+                        mask = cv.erode(mask, None)
+                        mask = cv.erode(mask, None)
+                        mask = cv.erode(mask, None)
+
+                        pts = np.array([
+                            [b1[0], b1[1]], 
+                            [b2[0], b2[1]], 
+                            [b4[0], b4[1]],
+                            [b3[0], b3[1]]
+                            ], np.int32)
+
+                        pts.reshape((-1, 1, 2))
+                        # color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+                        mask = cv.fillPoly(mask, [pts], (255, 255, 255))
+
+                        col = cv.mean(raw, mask)
+
+                        canny = cv.fillPoly(canny, [pts], (col[0], col[1], col[2]))
+
+            cv.imshow('canny', canny)
+
+            cv.waitKey()
+            exit(0)
+
 
         # cv.imshow('canny dilated', canny_d)
 
