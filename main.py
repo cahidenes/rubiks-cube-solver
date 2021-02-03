@@ -7,6 +7,9 @@ cam = cv.VideoCapture(0)
 eps = 0.00001
 W, H = cam.get(cv.CAP_PROP_FRAME_WIDTH), cam.get(cv.CAP_PROP_FRAME_HEIGHT)
 
+firstRead = []
+secondRead = []
+
 def dist(p1, p2):
     return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
 
@@ -27,6 +30,18 @@ def area(l):
     for i in range(0, len(l)):
         alan += l[i][0]*l[i-1][1] - l[i-1][0]*l[i][1]
     return abs(alan/2)
+
+def cdist(color1, color2):
+    return ((color1[0] - color2[0])**2 + (color1[1] - color2[1])**2 + (color1[2] - color2[2])**2)**0.5
+
+def turnHSV(arr):
+    tmp = np.zeros((1, len(arr), 3), np.uint8)
+    for i in range(len(arr)):
+        tmp[0][i] = np.array([arr[i][0], arr[i][1], arr[i][2]])
+    tmp = cv.cvtColor(tmp, cv.COLOR_BGR2HSV)
+    for i in range(len(arr)):
+        arr[i] = [(float(tmp[0][i][0] + 30) % 180), float(tmp[0][i][1]), float(tmp[0][i][2])]
+    return np.array(arr)
 
 while True:
     isTrue, raw = cam.read()
@@ -111,7 +126,7 @@ while True:
     canny = cv.line(canny, (675, 571), (675, 342), (0, 255, 0), 3)
     canny = cv.line(canny, (454, 211), (675, 342), (0, 255, 0), 3)
     alan = area(pts)
-    print(alan)
+    # print(alan)
 
     canny = cv.circle(canny, (675, 342), 30, (0, 0, 255))
     canny = cv.circle(canny, (675, 342), 50, (0, 0, 255))
@@ -149,13 +164,17 @@ while True:
         x3, y3 = p1[1][0] + eps, p1[1][1] + eps
         x4, y4 = p2[1][0], p2[1][1]
 
-        print(x1, y1)
-        print(x2, y2)
-        print(x3, y3)
-        print(x4, y4)
+        # print(x1, y1)
+        # print(x2, y2)
+        # print(x3, y3)
+        # print(x4, y4)
 
         ax = (x3*(y4-y3)/(x4-x3) - x1*(y2-y1)/(x2-x1) + y1 - y3)/((y4-y3)/(x4-x3) - (y2-y1)/(x2-x1))
         ay = (ax-x1)*(y2-y1)/(x2-x1) + y1
+
+        if ax > 100000 or ay > 100000:
+            continue
+
         center = int(ax), int(ay)
         if 0 < ax < 1000 and 0 < ay < 1000:
             canny = cv.circle(canny, center, 5, (255, 255, 0), -1)
@@ -228,6 +247,7 @@ while True:
             canny = cv.circle(canny, kk3, 10, (0, 0, 255))
 
             #* Faces
+            read = []
             for faces in range(3):
                 if faces == 0:
                     ax1 = cikar(k1, center)
@@ -256,10 +276,6 @@ while True:
 
                         mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
 
-                        mask = cv.erode(mask, None)
-                        mask = cv.erode(mask, None)
-                        mask = cv.erode(mask, None)
-
                         pts = np.array([
                             [b1[0], b1[1]], 
                             [b2[0], b2[1]], 
@@ -271,14 +287,68 @@ while True:
                         # color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
                         mask = cv.fillPoly(mask, [pts], (255, 255, 255))
 
+                        mask = cv.erode(mask, None)
+                        mask = cv.erode(mask, None)
+                        mask = cv.erode(mask, None)
+
                         col = cv.mean(raw, mask)
+                        # col_im = np.zeros((1, 1, 3), np.uint8)
+                        # col_im[0][0] = [col[0], col[1], col[2]]
+                        # col_im = cv.cvtColor(col_im, cv.COLOR_BGR2HSV)
+                        # col_im[0][0][2] = 255
+                        # col_im = cv.cvtColor(col_im, cv.COLOR_HSV2BGR)
+                        # col = col_im[0][0][0], col_im[0][0][1], col_im[0][0][2]
 
-                        canny = cv.fillPoly(canny, [pts], (col[0], col[1], col[2]))
+                        canny = cv.fillPoly(canny, [pts], (int(col[0]), int(col[1]), int(col[2])))
 
-            cv.imshow('canny', canny)
+                        read.append((col[0], col[1], col[2]))
+            # cv.imshow('canny', canny)
 
-            cv.waitKey()
-            exit(0)
+            # cv.waitKey()
+            # exit(0)
+
+            if not firstRead:
+                firstRead = read
+                cv.imshow('ilk okuma', canny)
+                cv.imshow('ilk okuma raw', raw)
+            else:
+                fark = 0
+                for i in range(len(read)):
+                    for j in range(3):
+                        fark += (firstRead[i][j] - read[i][j])**2
+                if fark > 270000:
+                    secondRead = read
+                    cv.imshow('ikinci okuma', canny)
+                    cv.imshow('ikinci okuma raw', raw)
+                    print(firstRead + secondRead)
+                    reads = firstRead + secondRead
+
+                    kumeler = [[], [], [], [], [], []]
+                    reads = turnHSV(reads)
+                    reads = reads[reads[:,1].argsort()]
+                    print(reads)
+                    for i in range(9):
+                        kumeler[0].append(reads[i])
+                    reads = reads[9:]
+
+                    reads = reads[reads[:,0].argsort()]
+                    for j in range(1, 6):
+                        for i in range(9):
+                            kumeler[j].append(reads[(j-1)*9 + i])
+
+                    enson = np.zeros((600//2, 1500//2, 3), np.uint8)
+                    for i in range(6):
+                        for j in range(len(kumeler[i])):
+                            enson = cv.rectangle(enson, (j*50, i*50), ((j+1)*50, (i+1)*50), (int(kumeler[i][j][0]), int(kumeler[i][j][1]), int(kumeler[i][j][2])), -1)
+
+                    for i in enson:
+                        for j in i:
+                            j[0] = (j[0] + 150) % 180
+                    enson = cv.cvtColor(enson, cv.COLOR_HSV2BGR)
+                    cv.imshow('cikti', enson)
+                    cv.waitKey()
+
+                    exit(0)
 
 
         # cv.imshow('canny dilated', canny_d)
