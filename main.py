@@ -40,8 +40,299 @@ def turnHSV(arr):
         tmp[0][i] = np.array([arr[i][0], arr[i][1], arr[i][2]])
     tmp = cv.cvtColor(tmp, cv.COLOR_BGR2HSV)
     for i in range(len(arr)):
-        arr[i] = [(float(tmp[0][i][0] + 30) % 180), float(tmp[0][i][1]), float(tmp[0][i][2])]
+        arr[i] = [(float(tmp[0][i][0] + 30) % 180), float(tmp[0][i][1]), float(tmp[0][i][2]), i]
     return np.array(arr)
+
+def doldur(kup, face, up):
+    if face[4] == 0:
+        x = 0
+        if up == 1:
+            kup[x+0] = face[0]
+            kup[x+1] = face[1]
+            kup[x+2] = face[2]
+            kup[x+3] = face[3]
+            kup[x+4] = face[4]
+            kup[x+5] = face[5]
+            kup[x+6] = face[6]
+            kup[x+7] = face[7]
+            kup[x+8] = face[8]
+        elif up == 4:
+            kup[x+0] = face[6]
+            kup[x+1] = face[3]
+            kup[x+2] = face[0]
+            kup[x+3] = face[7]
+            kup[x+4] = face[4]
+            kup[x+5] = face[1]
+            kup[x+6] = face[8]
+            kup[x+7] = face[5]
+            kup[x+8] = face[2]
+        elif up == 5:
+            kup[x+0] = face[2]
+            kup[x+1] = face[5]
+            kup[x+2] = face[8]
+            kup[x+3] = face[1]
+            kup[x+4] = face[4]
+            kup[x+5] = face[7]
+            kup[x+6] = face[0]
+            kup[x+7] = face[3]
+            kup[x+8] = face[6]
+        elif up == 2:
+            kup[x+0] = face[8]
+            kup[x+1] = face[7]
+            kup[x+2] = face[6]
+            kup[x+3] = face[5]
+            kup[x+4] = face[4]
+            kup[x+5] = face[3]
+            kup[x+6] = face[2]
+            kup[x+7] = face[1]
+            kup[x+8] = face[0]
+        else:
+            return False
+    elif face[4] == 1:
+        x = 36
+        if up == 0:
+            kup[x+0] = face[0]
+            kup[x+1] = face[1]
+            kup[x+2] = face[2]
+            kup[x+3] = face[3]
+            kup[x+4] = face[4]
+            kup[x+5] = face[5]
+            kup[x+6] = face[6]
+            kup[x+7] = face[7]
+            kup[x+8] = face[8]
+        elif up == 5:
+            kup[x+0] = face[6]
+            kup[x+1] = face[3]
+            kup[x+2] = face[0]
+            kup[x+3] = face[7]
+            kup[x+4] = face[4]
+            kup[x+5] = face[1]
+            kup[x+6] = face[8]
+            kup[x+7] = face[5]
+            kup[x+8] = face[2]
+        elif up == 4:
+            kup[x+0] = face[2]
+            kup[x+1] = face[5]
+            kup[x+2] = face[8]
+            kup[x+3] = face[1]
+            kup[x+4] = face[4]
+            kup[x+5] = face[7]
+            kup[x+6] = face[0]
+            kup[x+7] = face[3]
+            kup[x+8] = face[6]
+        elif up == 3:
+            kup[x+0] = face[8]
+            kup[x+1] = face[7]
+            kup[x+2] = face[6]
+            kup[x+3] = face[5]
+            kup[x+4] = face[4]
+            kup[x+5] = face[3]
+            kup[x+6] = face[2]
+            kup[x+7] = face[1]
+            kup[x+8] = face[0]
+        else:
+            return False
+    elif face[4] == 2:
+        x = 18
+        if up == 0:
+            kup[x+0] = face[0]
+            kup[x+1] = face[1]
+            kup[x+2] = face[2]
+            kup[x+3] = face[3]
+            kup[x+4] = face[4]
+            kup[x+5] = face[5]
+            kup[x+6] = face[6]
+            kup[x+7] = face[7]
+            kup[x+8] = face[8]
+        elif up == 4:
+            kup[x+0] = face[6]
+            kup[x+1] = face[3]
+            kup[x+2] = face[0]
+            kup[x+3] = face[7]
+            kup[x+4] = face[4]
+            kup[x+5] = face[1]
+            kup[x+6] = face[8]
+            kup[x+7] = face[5]
+            kup[x+8] = face[2]
+        elif up == 5:
+            kup[x+0] = face[2]
+            kup[x+1] = face[5]
+            kup[x+2] = face[8]
+            kup[x+3] = face[1]
+            kup[x+4] = face[4]
+            kup[x+5] = face[7]
+            kup[x+6] = face[0]
+            kup[x+7] = face[3]
+            kup[x+8] = face[6]
+        elif up == 3:
+            kup[x+0] = face[8]
+            kup[x+1] = face[7]
+            kup[x+2] = face[6]
+            kup[x+3] = face[5]
+            kup[x+4] = face[4]
+            kup[x+5] = face[3]
+            kup[x+6] = face[2]
+            kup[x+7] = face[1]
+            kup[x+8] = face[0]
+        else:
+            return False
+    elif face[4] == 3:
+        x = 45
+        if up == 2:
+            kup[x+0] = face[0]
+            kup[x+1] = face[1]
+            kup[x+2] = face[2]
+            kup[x+3] = face[3]
+            kup[x+4] = face[4]
+            kup[x+5] = face[5]
+            kup[x+6] = face[6]
+            kup[x+7] = face[7]
+            kup[x+8] = face[8]
+        elif up == 4:
+            kup[x+0] = face[6]
+            kup[x+1] = face[3]
+            kup[x+2] = face[0]
+            kup[x+3] = face[7]
+            kup[x+4] = face[4]
+            kup[x+5] = face[1]
+            kup[x+6] = face[8]
+            kup[x+7] = face[5]
+            kup[x+8] = face[2]
+        elif up == 5:
+            kup[x+0] = face[2]
+            kup[x+1] = face[5]
+            kup[x+2] = face[8]
+            kup[x+3] = face[1]
+            kup[x+4] = face[4]
+            kup[x+5] = face[7]
+            kup[x+6] = face[0]
+            kup[x+7] = face[3]
+            kup[x+8] = face[6]
+        elif up == 1:
+            kup[x+0] = face[8]
+            kup[x+1] = face[7]
+            kup[x+2] = face[6]
+            kup[x+3] = face[5]
+            kup[x+4] = face[4]
+            kup[x+5] = face[3]
+            kup[x+6] = face[2]
+            kup[x+7] = face[1]
+            kup[x+8] = face[0]
+        else:
+            return False
+    elif face[4] == 4:
+        x = 27
+        if up == 0:
+            kup[x+0] = face[0]
+            kup[x+1] = face[1]
+            kup[x+2] = face[2]
+            kup[x+3] = face[3]
+            kup[x+4] = face[4]
+            kup[x+5] = face[5]
+            kup[x+6] = face[6]
+            kup[x+7] = face[7]
+            kup[x+8] = face[8]
+        elif up == 1:
+            kup[x+0] = face[6]
+            kup[x+1] = face[3]
+            kup[x+2] = face[0]
+            kup[x+3] = face[7]
+            kup[x+4] = face[4]
+            kup[x+5] = face[1]
+            kup[x+6] = face[8]
+            kup[x+7] = face[5]
+            kup[x+8] = face[2]
+        elif up == 2:
+            kup[x+0] = face[2]
+            kup[x+1] = face[5]
+            kup[x+2] = face[8]
+            kup[x+3] = face[1]
+            kup[x+4] = face[4]
+            kup[x+5] = face[7]
+            kup[x+6] = face[0]
+            kup[x+7] = face[3]
+            kup[x+8] = face[6]
+        elif up == 3:
+            kup[x+0] = face[8]
+            kup[x+1] = face[7]
+            kup[x+2] = face[6]
+            kup[x+3] = face[5]
+            kup[x+4] = face[4]
+            kup[x+5] = face[3]
+            kup[x+6] = face[2]
+            kup[x+7] = face[1]
+            kup[x+8] = face[0]
+        else:
+            return False
+    elif face[4] == 5:
+        x = 9
+        if up == 0:
+            kup[x+0] = face[0]
+            kup[x+1] = face[1]
+            kup[x+2] = face[2]
+            kup[x+3] = face[3]
+            kup[x+4] = face[4]
+            kup[x+5] = face[5]
+            kup[x+6] = face[6]
+            kup[x+7] = face[7]
+            kup[x+8] = face[8]
+        elif up == 2:
+            kup[x+0] = face[6]
+            kup[x+1] = face[3]
+            kup[x+2] = face[0]
+            kup[x+3] = face[7]
+            kup[x+4] = face[4]
+            kup[x+5] = face[1]
+            kup[x+6] = face[8]
+            kup[x+7] = face[5]
+            kup[x+8] = face[2]
+        elif up == 1:
+            kup[x+0] = face[2]
+            kup[x+1] = face[5]
+            kup[x+2] = face[8]
+            kup[x+3] = face[1]
+            kup[x+4] = face[4]
+            kup[x+5] = face[7]
+            kup[x+6] = face[0]
+            kup[x+7] = face[3]
+            kup[x+8] = face[6]
+        elif up == 3:
+            kup[x+0] = face[8]
+            kup[x+1] = face[7]
+            kup[x+2] = face[6]
+            kup[x+3] = face[5]
+            kup[x+4] = face[4]
+            kup[x+5] = face[3]
+            kup[x+6] = face[2]
+            kup[x+7] = face[1]
+            kup[x+8] = face[0]
+        else:
+            return False
+    else:
+        return False
+
+def getcolor(code):
+    if code == 0:
+        return (255, 255, 255)
+    elif code == 1:
+        return (0, 0, 255)
+    elif code == 2:
+        return (0, 162, 255)
+    elif code == 3:
+        return (0, 255, 255)
+    elif code == 4:
+        return (0, 255, 0)
+    elif code == 5:
+        return (255, 0, 0)
+    else:
+        raise Exception("unknown color code")
+
+# beyaz = 0
+# kirmizi = 1
+# turuncu = 2
+# sari = 3
+# yesil = 4
+# mavi = 5
 
 while True:
     isTrue, raw = cam.read()
@@ -187,7 +478,7 @@ while True:
 
         dx, dy = p2[0][0] - p1[0][0], p2[0][1] - p1[0][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx1, ky1 = p2[0][0], p2[0][1]
+        kx1, ky1 = p2[0][0] + dx*130, p2[0][1] + dy*130
         while 0 < kx1 < W and 0 < ky1 < H:
             if canny_d[int(ky1), int(kx1)].all() == 0:
                 break
@@ -198,7 +489,8 @@ while True:
 
         dx, dy = p2[1][0] - p1[1][0], p2[1][1] - p1[1][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx2, ky2 = p2[1][0], p2[1][1]
+        kx2, ky2 = p2[1][0] + dx*130, p2[1][1] + dy*130
+        canny = cv.circle(canny, (int(kx2), int(ky2)), 10, (0, 0, 255))
         while 0 < kx2 < W and 0 < ky2 < H:
             if canny_d[int(ky2), int(kx2)].all() == 0:
                 break
@@ -209,7 +501,7 @@ while True:
 
         dx, dy = p2[2][0] - p1[2][0], p2[2][1] - p1[2][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx3, ky3 = p2[2][0], p2[2][1]
+        kx3, ky3 = p2[2][0] + dx*130, p2[2][1] + dy*130
         while 0 < kx3 < W and 0 < ky3 < H:
             if canny_d[int(ky3), int(kx3)].all() == 0:
                 break
@@ -328,23 +620,88 @@ while True:
                     reads = reads[reads[:,1].argsort()]
                     print(reads)
                     for i in range(9):
-                        kumeler[0].append(reads[i])
+                        kumeler[0].append(int(reads[i][3]))
                     reads = reads[9:]
 
                     reads = reads[reads[:,0].argsort()]
                     for j in range(1, 6):
                         for i in range(9):
-                            kumeler[j].append(reads[(j-1)*9 + i])
+                            kumeler[j].append(int(reads[(j-1)*9 + i][3]))
 
-                    enson = np.zeros((600//2, 1500//2, 3), np.uint8)
+                    nerede = []
+                    for i in range(54):
+                        nerede.append(-1)
                     for i in range(6):
-                        for j in range(len(kumeler[i])):
-                            enson = cv.rectangle(enson, (j*50, i*50), ((j+1)*50, (i+1)*50), (int(kumeler[i][j][0]), int(kumeler[i][j][1]), int(kumeler[i][j][2])), -1)
+                        for j in range(9):
+                            nerede[kumeler[i][j]] = i
 
-                    for i in enson:
-                        for j in i:
-                            j[0] = (j[0] + 150) % 180
-                    enson = cv.cvtColor(enson, cv.COLOR_HSV2BGR)
+                    kup = []
+                    for i in range(54):
+                        kup.append(-1)
+
+                    print("nerede:", nerede)
+
+                    doldur(kup, nerede[0:9], nerede[13])
+                    doldur(kup, nerede[9:18], nerede[22])
+                    doldur(kup, nerede[18:27], nerede[4])
+                    doldur(kup, nerede[27:36], nerede[40])
+                    doldur(kup, nerede[36:45], nerede[49])
+                    doldur(kup, nerede[45:54], nerede[31])
+
+                    print("kup:", kup)
+
+                    enson = np.zeros((500, 750, 3), np.uint8)
+                    
+                    seperatorThickness = 2
+                    for i in range(3):
+                        for j in range(3):
+                            px = 10 + 150 + 10
+                            py = 10
+                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[i+j*3]), -1)
+                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                    for i in range(3):
+                        for j in range(3):
+                            px = 10
+                            py = 10 + 150 + 10
+                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[9+i+j*3]), -1)
+                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                    for i in range(3):
+                        for j in range(3):
+                            px = 10 + 150 + 10
+                            py = 10 + 150 + 10
+                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[18+i+j*3]), -1)
+                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                    for i in range(3):
+                        for j in range(3):
+                            px = 10 + 150 + 10 + 150 + 10
+                            py = 10 + 150 + 10
+                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[27+i+j*3]), -1)
+                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                    for i in range(3):
+                        for j in range(3):
+                            px = 10 + 150 + 10 + 150 + 10 + 150 + 10
+                            py = 10 + 150 + 10
+                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[36+i+j*3]), -1)
+                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                    for i in range(3):
+                        for j in range(3):
+                            px = 10 + 150 + 10
+                            py = 10 + 150 + 10 + 150 + 10
+                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[45+i+j*3]), -1)
+                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+
                     cv.imshow('cikti', enson)
                     cv.waitKey()
 
