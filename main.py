@@ -1,7 +1,10 @@
 import cv2 as cv
 import numpy as np
 import random
-import clipboard
+try:
+    import clipboard
+except:
+    pass
 
 DEBUG = False
 
@@ -740,9 +743,13 @@ while True:
                     cube_text = cube_text.replace('3', 'Y')
                     cube_text = cube_text.replace('4', 'G')
                     cube_text = cube_text.replace('5', 'B')
-                    clipboard.copy(cube_text)
-
-                    enson = cv.putText(enson, 'Copied to clipboard! Press Enter to exit', (10, 510), cv.FONT_HERSHEY_SIMPLEX, 1, ((255, 255, 255)),)
+                    
+                    try:
+                        clipboard.copy(cube_text)
+                        enson = cv.putText(enson, 'Copied to clipboard! Press Enter to exit', (10, 510), cv.FONT_HERSHEY_SIMPLEX, 1, ((255, 255, 255)),)
+                    except:
+                        enson = cv.putText(enson, 'Press Enter to exit', (10, 510), cv.FONT_HERSHEY_SIMPLEX, 1, ((255, 255, 255)),)
+                    
 
                     cv.imshow('raw', enson)
                     cv.waitKey()
