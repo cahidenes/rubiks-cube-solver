@@ -1,6 +1,9 @@
 import cv2 as cv
 import numpy as np
 import random
+import clipboard
+
+DEBUG = False
 
 cam = cv.VideoCapture(0)
 
@@ -9,6 +12,9 @@ W, H = cam.get(cv.CAP_PROP_FRAME_WIDTH), cam.get(cv.CAP_PROP_FRAME_HEIGHT)
 
 firstRead = []
 secondRead = []
+
+firstDone = False
+secondDone = False
 
 def dist(p1, p2):
     return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
@@ -325,7 +331,17 @@ def getcolor(code):
     elif code == 5:
         return (255, 0, 0)
     else:
-        raise Exception("unknown color code")
+        error_im = np.zeros(raw.shape, np.uint8)
+        error_im = cv.putText(error_im, 'Scanning is not successful :(', (10, 60), cv.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
+        error_im = cv.putText(error_im, 'Press Enter to exit', (10, 180), cv.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
+        cv.imshow('raw', error_im)
+        cv.waitKey()
+        exit(1)
+
+def kesisim(x1, y1, x2, y2, x3, y3, x4, y4):
+    ax = (x3*(y4-y3)/(x4-x3) - x1*(y2-y1)/(x2-x1) + y1 - y3)/((y4-y3)/(x4-x3) - (y2-y1)/(x2-x1))
+    ay = (ax-x1)*(y2-y1)/(x2-x1) + y1
+    return ax, ay
 
 # beyaz = 0
 # kirmizi = 1
@@ -340,65 +356,17 @@ while True:
         break
 
     raw = cv.flip(raw, 1)
-
-    cv.imshow('raw', raw)
-
-# --------------------------- Hue Saturation Value --------------------------- #
-
-    # hsv = cv.cvtColor(raw, cv.COLOR_BGR2HSV)
-
-    # hue = hsv[:, :, 0]
-    # saturation = hsv[:, :, 1]
-    # value = hsv[:, :, 2]
-    # comp = hsv.copy()
-
-    # value_d = value.copy()
-    # value_d[:, :] = 255
-    # value_d[value < 250] = 250
-    # value_d[value < 200] = 200
-    # value_d[value < 150] = 150
-    # value_d[value < 100] = 100
-    # value_d[value < 50] = 50
-
-    # saturation_d = saturation.copy()
-    # saturation_d[:, :] = 225
-    # saturation_d[saturation < 200] = 175
-    # saturation_d[saturation < 150] = 125
-    # saturation_d[saturation < 100] = 75
-    # saturation_d[saturation < 50] = 0
-
-    # hue_d = hue.copy()
-    # hue_d[:, :] = 0
-    # hue_d[hue < 148] = 117
-    # hue_d[hue < 91] = 60
-    # hue_d[hue < 40] = 25
-    # hue_d[hue < 19] = 15
-    # hue_d[hue < 10] = 0
-
-    # comp = np.array([hue_d, saturation_d, value_d])
-    # comp = np.moveaxis(comp, [0, 1, 2], [2, 0, 1])
-    
-    # # comp = np.concatenate((hue, saturation, value), axis=1)
-    # # print(comp.shape)
-    # # comp[:, :] = [hue[:, :], value[:, :], saturation[:, :]]
-    # # comp[saturation<100][1] = 0
-    # # comp[saturation>=100][1] = 255
-    # # for i in comp:
-    # #     for j in i:
-    # #         if j[2] < 55:
-    # #             j[2] = 0
-    #         # if j[1] < 100: 
-    #         #     j[1] = 0
-    #         # else:
-    #         #     j[1] = 255
-    # comp = cv.cvtColor(comp, cv.COLOR_HSV2BGR)
-    # cv.imshow('comp', comp)
+    if firstDone:
+        raw = cv.circle(raw, (100, 100), 50, (0, 255, 0), -1)
+    if secondDone:
+        raw = cv.circle(raw, (100, 200), 50, (0, 255, 0), -1)
 
 
 # ------------------------------ Edge Detection ------------------------------ #
-    raw = cv.medianBlur(raw, 7)
+    blur = cv.medianBlur(raw, 7)
 
-    canny = cv.Canny(raw, 90, 200)
+    canny = cv.Canny(blur, 50, 150)
+    scanning_areas = canny.copy()
     canny_gray = canny.copy()
     canny = cv.cvtColor(canny, cv.COLOR_GRAY2BGR)
     pts = np.array([
@@ -412,15 +380,22 @@ while True:
 
     pts.reshape((-1, 1, 2))
 
-    canny = cv.polylines(canny, [pts], True, (0, 255, 0), 3)
-    canny = cv.line(canny, (885, 200), (675, 342), (0, 255, 0), 3)
-    canny = cv.line(canny, (675, 571), (675, 342), (0, 255, 0), 3)
-    canny = cv.line(canny, (454, 211), (675, 342), (0, 255, 0), 3)
+    if DEBUG:
+        canny = cv.polylines(canny, [pts], True, (0, 255, 0), 3)
+        # canny = cv.line(canny, (885, 200), (675, 342), (0, 255, 0), 3)
+        # canny = cv.line(canny, (675, 571), (675, 342), (0, 255, 0), 3)
+        # canny = cv.line(canny, (454, 211), (675, 342), (0, 255, 0), 3)
+
+        canny = cv.circle(canny, (675, 342), 30, (0, 0, 255))
+        canny = cv.circle(canny, (675, 342), 50, (0, 0, 255))
+    else:
+        raw = cv.polylines(raw, [pts], True, (0, 255, 0), 3)
+        raw = cv.line(raw, (885, 200), (675, 342), (0, 255, 0), 3)
+        raw = cv.line(raw, (675, 571), (675, 342), (0, 255, 0), 3)
+        raw = cv.line(raw, (454, 211), (675, 342), (0, 255, 0), 3)
+
     alan = area(pts)
     # print(alan)
-
-    canny = cv.circle(canny, (675, 342), 30, (0, 0, 255))
-    canny = cv.circle(canny, (675, 342), 50, (0, 0, 255))
 
     p1 = []
     p2 = []
@@ -428,19 +403,16 @@ while True:
     points = cv.ellipse2Poly((675, 342), (30, 30), 0, 0, 360, 1)
     for (x, y) in points:
         if canny_gray[y, x] == 255:
-            # canny = cv.circle(canny, (x, y), 5, (255, 0, 0))
-            if len(p1) == 0 or dist((x, y), p1[-1]) > 10:
+            if len(p1) == 0 or dist((x, y), p1[-1]) > 30:
                 p1.append((x, y))
 
     points = cv.ellipse2Poly((675, 342), (50, 50), 0, 0, 360, 1)
     for (x, y) in points:
         if canny_gray[y, x] == 255:
-            # canny = cv.circle(canny, (x, y), 5, (255, 0, 0))
-            if len(p2) == 0 or dist((x, y), p2[-1]) > 10:
+            if len(p2) == 0 or dist((x, y), p2[-1]) > 30:
                 p2.append((x, y))
 
     full = False
-
     if len(p1) > 0 and len(p2) > 0 and dist(p1[0], p2[0]) < 22:
         canny = cv.line(canny, p1[0], p2[0], (0, 255, 0), 2)
     if len(p1) > 1 and len(p2) > 1 and dist(p1[1], p2[1]) < 22:
@@ -454,31 +426,32 @@ while True:
         x2, y2 = p2[0][0], p2[0][1]
         x3, y3 = p1[1][0] + eps, p1[1][1] + eps
         x4, y4 = p2[1][0], p2[1][1]
+        x5, y5 = p1[2][0] + eps, p1[2][1] + eps
+        x6, y6 = p2[2][0], p2[2][1]
 
         # print(x1, y1)
         # print(x2, y2)
         # print(x3, y3)
         # print(x4, y4)
 
-        ax = (x3*(y4-y3)/(x4-x3) - x1*(y2-y1)/(x2-x1) + y1 - y3)/((y4-y3)/(x4-x3) - (y2-y1)/(x2-x1))
-        ay = (ax-x1)*(y2-y1)/(x2-x1) + y1
+        ax1, ay1 = kesisim(x1, y1, x2, y2, x3, y3, x4, y4)
+        ax2, ay2 = kesisim(x3, y3, x4, y4, x5, y5, x6, y6)
+        ax3, ay3 = kesisim(x5, y5, x6, y6, x1, y1, x2, y2)
+
+        ax, ay = (ax1 + ax2 + ax3)/3, (ay1 + ay2 + ay3)/3
 
         if ax > 100000 or ay > 100000:
             continue
 
         center = int(ax), int(ay)
-        if 0 < ax < 1000 and 0 < ay < 1000:
+        if DEBUG and 0 < ax < 1000 and 0 < ay < 1000:
             canny = cv.circle(canny, center, 5, (255, 255, 0), -1)
         
-        canny_d = cv.dilate(canny, None)
-        canny_d = cv.dilate(canny_d, None)
-        canny_d = cv.dilate(canny_d, None)
-        canny_d = cv.dilate(canny_d, None)
-        canny_d = cv.dilate(canny_d, None)
+        canny_d = cv.dilate(canny, np.ones((10, 10), np.uint8))
 
         dx, dy = p2[0][0] - p1[0][0], p2[0][1] - p1[0][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx1, ky1 = p2[0][0] + dx*130, p2[0][1] + dy*130
+        kx1, ky1 = ax + dx*200, ay + dy*200
         while 0 < kx1 < W and 0 < ky1 < H:
             if canny_d[int(ky1), int(kx1)].all() == 0:
                 break
@@ -489,7 +462,7 @@ while True:
 
         dx, dy = p2[1][0] - p1[1][0], p2[1][1] - p1[1][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx2, ky2 = p2[1][0] + dx*130, p2[1][1] + dy*130
+        kx2, ky2 = ax + dx*200, ay + dy*200
         canny = cv.circle(canny, (int(kx2), int(ky2)), 10, (0, 0, 255))
         while 0 < kx2 < W and 0 < ky2 < H:
             if canny_d[int(ky2), int(kx2)].all() == 0:
@@ -501,7 +474,7 @@ while True:
 
         dx, dy = p2[2][0] - p1[2][0], p2[2][1] - p1[2][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx3, ky3 = p2[2][0] + dx*130, p2[2][1] + dy*130
+        kx3, ky3 = ax + dx*200, ay + dy*200
         while 0 < kx3 < W and 0 < ky3 < H:
             if canny_d[int(ky3), int(kx3)].all() == 0:
                 break
@@ -514,17 +487,18 @@ while True:
         k2 = (int(kx2), int(ky2))
         k3 = (int(kx3), int(ky3))
 
-        canny = cv.circle(canny, k1, 10, (0, 0, 255))
-        canny = cv.circle(canny, k2, 10, (0, 0, 255))
-        canny = cv.circle(canny, k3, 10, (0, 0, 255))
+        if DEBUG:
+            canny = cv.circle(canny, k1, 10, (0, 0, 255))
+            canny = cv.circle(canny, k2, 10, (0, 0, 255))
+            canny = cv.circle(canny, k3, 10, (0, 0, 255))
 
         kk1 = topla(cikar(k1, center), k2)
         kk2 = topla(cikar(k2, center), k3)
         kk3 = topla(cikar(k3, center), k1)
 
-        kk1 = cikar(kk1, carp(0.16, cikar(kk1, center)))
-        kk2 = cikar(kk2, carp(0.16, cikar(kk2, center)))
-        kk3 = cikar(kk3, carp(0.16, cikar(kk3, center)))
+        kk1 = cikar(kk1, carp(0.13, cikar(kk1, center)))
+        kk2 = cikar(kk2, carp(0.13, cikar(kk2, center)))
+        kk3 = cikar(kk3, carp(0.13, cikar(kk3, center)))
         kk1 = (int(kk1[0]), int(kk1[1]))
         kk2 = (int(kk2[0]), int(kk2[1]))
         kk3 = (int(kk3[0]), int(kk3[1]))
@@ -533,10 +507,20 @@ while True:
 
         error = abs(calculated_area - alan)/alan
 
-        if error < 0.2:
-            canny = cv.circle(canny, kk1, 10, (0, 0, 255))
-            canny = cv.circle(canny, kk2, 10, (0, 0, 255))
-            canny = cv.circle(canny, kk3, 10, (0, 0, 255))
+        olmadi = False
+
+        if error < 0.1:
+            if DEBUG:
+                canny = cv.circle(canny, kk1, 10, (0, 0, 255))
+                canny = cv.circle(canny, kk2, 10, (0, 0, 255))
+                canny = cv.circle(canny, kk3, 10, (0, 0, 255))
+
+                scanning_areas = cv.circle(scanning_areas, k1, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, k2, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, k3, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, kk1, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, kk2, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, kk3, 10, (255, 255, 255))
 
             #* Faces
             read = []
@@ -559,14 +543,14 @@ while True:
                         b3 = topla(center, topla(carp( i   /3, ax1), carp((j+1)/3, ax2)))
                         b4 = topla(center, topla(carp((i+1)/3, ax1), carp((j+1)/3, ax2)))
 
-                        b1 = cikar(b1, carp(0.16*min(i  , j  )/3, cikar(b1, center)))
-                        b2 = cikar(b2, carp(0.16*min(i+1, j  )/3, cikar(b2, center)))
-                        b3 = cikar(b3, carp(0.16*min(i  , j+1)/3, cikar(b3, center)))
-                        b4 = cikar(b4, carp(0.16*min(i+1, j+1)/3, cikar(b4, center)))
+                        b1 = cikar(b1, carp(0.13*min(i  , j  )/3, cikar(b1, center)))
+                        b2 = cikar(b2, carp(0.13*min(i+1, j  )/3, cikar(b2, center)))
+                        b3 = cikar(b3, carp(0.13*min(i  , j+1)/3, cikar(b3, center)))
+                        b4 = cikar(b4, carp(0.13*min(i+1, j+1)/3, cikar(b4, center)))
 
-                        mask = np.zeros(canny.shape, np.uint8)
+                        mask = np.zeros((canny.shape[0], canny.shape[1]), np.uint8)
 
-                        mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
+                        # mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
 
                         pts = np.array([
                             [b1[0], b1[1]], 
@@ -579,9 +563,17 @@ while True:
                         # color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
                         mask = cv.fillPoly(mask, [pts], (255, 255, 255))
 
-                        mask = cv.erode(mask, None)
-                        mask = cv.erode(mask, None)
-                        mask = cv.erode(mask, None)
+                        mask = cv.erode(mask, np.ones((35,35), np.uint8) )
+
+                        scanning_areas = cv.bitwise_or(scanning_areas, mask)
+
+                        # edge_check = cv.mean(canny, mask)
+                        # if edge_check[0] > 0:
+                        #     olmadi = True
+
+                        alan = cv.mean(mask)
+                        if alan[0] < 0.005:
+                            olmadi = True
 
                         col = cv.mean(raw, mask)
                         # col_im = np.zeros((1, 1, 3), np.uint8)
@@ -590,19 +582,26 @@ while True:
                         # col_im[0][0][2] = 255
                         # col_im = cv.cvtColor(col_im, cv.COLOR_HSV2BGR)
                         # col = col_im[0][0][0], col_im[0][0][1], col_im[0][0][2]
-
-                        canny = cv.fillPoly(canny, [pts], (int(col[0]), int(col[1]), int(col[2])))
+                        if DEBUG:
+                            canny = cv.fillPoly(canny, [pts], (int(col[0]), int(col[1]), int(col[2])))
 
                         read.append((col[0], col[1], col[2]))
-            # cv.imshow('canny', canny)
+            if DEBUG:
+                # cv.imshow('canny', canny)
+                cv.imshow('scanning_areas', scanning_areas)
 
             # cv.waitKey()
             # exit(0)
 
+            if olmadi:
+                continue
+
             if not firstRead:
                 firstRead = read
-                cv.imshow('ilk okuma', canny)
-                cv.imshow('ilk okuma raw', raw)
+                firstDone = True
+                if DEBUG:
+                    cv.imshow('ilk okuma', canny)
+                    cv.imshow('ilk okuma raw', raw)
             else:
                 fark = 0
                 for i in range(len(read)):
@@ -610,15 +609,16 @@ while True:
                         fark += (firstRead[i][j] - read[i][j])**2
                 if fark > 270000:
                     secondRead = read
-                    cv.imshow('ikinci okuma', canny)
-                    cv.imshow('ikinci okuma raw', raw)
-                    print(firstRead + secondRead)
+                    secondDone = True
                     reads = firstRead + secondRead
+                    if DEBUG:
+                        cv.imshow('ikinci okuma', canny)
+                        cv.imshow('ikinci okuma raw', raw)
+                        print(reads)
 
                     kumeler = [[], [], [], [], [], []]
                     reads = turnHSV(reads)
                     reads = reads[reads[:,1].argsort()]
-                    print(reads)
                     for i in range(9):
                         kumeler[0].append(int(reads[i][3]))
                     reads = reads[9:]
@@ -639,8 +639,6 @@ while True:
                     for i in range(54):
                         kup.append(-1)
 
-                    print("nerede:", nerede)
-
                     doldur(kup, nerede[0:9], nerede[13])
                     doldur(kup, nerede[9:18], nerede[22])
                     doldur(kup, nerede[18:27], nerede[4])
@@ -648,9 +646,8 @@ while True:
                     doldur(kup, nerede[36:45], nerede[49])
                     doldur(kup, nerede[45:54], nerede[31])
 
-                    print("kup:", kup)
 
-                    enson = np.zeros((500, 750, 3), np.uint8)
+                    enson = np.zeros((490 + 30, 650, 3), np.uint8)
                     
                     seperatorThickness = 2
                     for i in range(3):
@@ -702,7 +699,52 @@ while True:
                             enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
                             enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
 
-                    cv.imshow('cikti', enson)
+                    cube_text = ''
+                    c = 0
+                    for j in range(3):
+                        for i in range(3):
+                            cube_text += str(kup[c])
+                            c += 1
+                        cube_text += '\n'
+                    cube_text_1 = ''
+                    cube_text_2 = ''
+                    cube_text_3 = ''
+                    for i in range(4):
+                        cube_text_1 += str(kup[c])
+                        c += 1
+                        cube_text_1 += str(kup[c])
+                        c += 1
+                        cube_text_1 += str(kup[c])
+                        c += 1
+                        cube_text_2 += str(kup[c])
+                        c += 1
+                        cube_text_2 += str(kup[c])
+                        c += 1
+                        cube_text_2 += str(kup[c])
+                        c += 1
+                        cube_text_3 += str(kup[c])
+                        c += 1
+                        cube_text_3 += str(kup[c])
+                        c += 1
+                        cube_text_3 += str(kup[c])
+                        c += 1
+                    cube_text += cube_text_1 + '\n' + cube_text_2 + '\n' + cube_text_3 + '\n'
+                    for j in range(3):
+                        for i in range(3):
+                            cube_text += str(kup[c])
+                            c += 1
+                        cube_text += '\n'
+                    cube_text = cube_text.replace('0', 'W')
+                    cube_text = cube_text.replace('1', 'R')
+                    cube_text = cube_text.replace('2', 'O')
+                    cube_text = cube_text.replace('3', 'Y')
+                    cube_text = cube_text.replace('4', 'G')
+                    cube_text = cube_text.replace('5', 'B')
+                    clipboard.copy(cube_text)
+
+                    enson = cv.putText(enson, 'Copied to clipboard! Press Enter to exit', (10, 510), cv.FONT_HERSHEY_SIMPLEX, 1, ((255, 255, 255)),)
+
+                    cv.imshow('raw', enson)
                     cv.waitKey()
 
                     exit(0)
@@ -715,38 +757,10 @@ while True:
         # kose0 = int(kose0[0]), int(kose0[1])
         # canny = cv.circle(canny, kose0, 10, (0, 0, 255))
         
-    cv.imshow('canny', canny)
-
-# --------------------------------- Contours --------------------------------- #
-
-    # hue_white = hue.copy()
-    # hue_white[saturation < 50] = 255
-    # cv.imshow('hue_white', hue_white)
-    # contours, hierarchy = cv.findContours(hue, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-
-    # thresh = 100
-    # for i in range(len(contours)-1, -1, -1):
-    #     if len(contours[i]) < thresh:
-    #         contours = np.delete(contours, i)        
-            
-    # deneme = np.zeros((raw.shape), dtype=np.uint8)
-    # cv.drawContours(deneme, contours, -1, (255, 255, 255))
-    # cv.drawContours(deneme, contours, -1, (255, 255, 255), 3)
-    # cv.imshow('deneme', deneme)
-
-    # # corner = cv.medianBlur(raw, 5)
-    # # corner = cv.cvtColor(corner,cv.COLOR_BGR2GRAY)
-    # corner = np.float32(deneme)
-    # dst = cv.cornerHarris(corner,11,21,0.04)
-
-    # raw[dst>0.02*dst.max()]=[0,0,255]
-
-    #result is dilated for marking the corners, not important
-    # dst = cv.dilate(dst, np.ones((5, 5), dtype=np.uint8))
-    # Threshold for an optimal value, it may vary depending on the image.
-    # dst[dst>0.01*dst.max()]=[0,0,255]
-    cv.imshow('raw', raw)
-    
+    if DEBUG:
+        cv.imshow('canny', canny)
+    else:
+        cv.imshow('raw', raw)    
 
     key = cv.waitKey(20)
     if key == ord('q'):
