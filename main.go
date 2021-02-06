@@ -44,17 +44,17 @@ var edgeTable = map[byte]byte{
 func makeCube(cubeList []byte) Cube {
 	var ret Cube
 	for i := range cubeList {
-		if cubeList[i] == byte('B') {
+		if cubeList[i] == byte('W') {
 			cubeList[i] = 1 << 0
-		} else if cubeList[i] == byte('S') {
-			cubeList[i] = 1 << 1
-		} else if cubeList[i] == byte('T') {
-			cubeList[i] = 1 << 2
-		} else if cubeList[i] == byte('K') {
-			cubeList[i] = 1 << 3
-		} else if cubeList[i] == byte('M') {
-			cubeList[i] = 1 << 4
 		} else if cubeList[i] == byte('Y') {
+			cubeList[i] = 1 << 1
+		} else if cubeList[i] == byte('O') {
+			cubeList[i] = 1 << 2
+		} else if cubeList[i] == byte('R') {
+			cubeList[i] = 1 << 3
+		} else if cubeList[i] == byte('B') {
+			cubeList[i] = 1 << 4
+		} else if cubeList[i] == byte('G') {
 			cubeList[i] = 1 << 5
 		}
 	}
@@ -71,6 +71,28 @@ func makeCube(cubeList []byte) Cube {
 				  59 60 61
 
 	*/
+
+	ret.edges[0] = edgeTable[cubeList[9]+cubeList[16]]
+	ret.edges[1] = edgeTable[cubeList[6]+cubeList[19]]
+	ret.edges[2] = edgeTable[cubeList[1]+cubeList[22]]
+	ret.edges[3] = edgeTable[cubeList[4]+cubeList[13]]
+	ret.edges[4] = edgeTable[cubeList[27]+cubeList[28]]
+	ret.edges[5] = edgeTable[cubeList[30]+cubeList[31]]
+	ret.edges[6] = edgeTable[cubeList[33]+cubeList[34]]
+	ret.edges[7] = edgeTable[cubeList[36]+cubeList[25]]
+	ret.edges[8] = edgeTable[cubeList[52]+cubeList[42]]
+	ret.edges[9] = edgeTable[cubeList[57]+cubeList[45]]
+	ret.edges[10] = edgeTable[cubeList[60]+cubeList[48]]
+	ret.edges[11] = edgeTable[cubeList[55]+cubeList[39]]
+
+	ret.corners[0] = cornerTable[cubeList[8]+cubeList[14]+cubeList[15]]
+	ret.corners[1] = cornerTable[cubeList[10]+cubeList[17]+cubeList[18]]
+	ret.corners[2] = cornerTable[cubeList[2]+cubeList[20]+cubeList[21]]
+	ret.corners[3] = cornerTable[cubeList[0]+cubeList[23]+cubeList[12]]
+	ret.corners[4] = cornerTable[cubeList[40]+cubeList[41]+cubeList[51]]
+	ret.corners[5] = cornerTable[cubeList[43]+cubeList[44]+cubeList[53]]
+	ret.corners[6] = cornerTable[cubeList[46]+cubeList[47]+cubeList[61]]
+	ret.corners[7] = cornerTable[cubeList[38]+cubeList[49]+cubeList[59]]
 
 	if cubeList[9] > cubeList[16] {
 		ret.edges[0] += 1 << 4
@@ -120,91 +142,69 @@ func makeCube(cubeList []byte) Cube {
 		ret.edges[11] += 1 << 4
 	}
 
-	if cubeList[8] < 2 {
+	if cubeList[8] < 3 {
 		ret.corners[0] += 0 << 3
-	} else if cubeList[15] < 2 {
+	} else if cubeList[15] < 3 {
 		ret.corners[0] += 1 << 3
 	} else {
 		ret.corners[0] += 2 << 3
 	}
 
-	if cubeList[10] < 2 {
+	if cubeList[10] < 3 {
 		ret.corners[1] += 0 << 3
-	} else if cubeList[18] < 2 {
+	} else if cubeList[18] < 3 {
 		ret.corners[1] += 1 << 3
 	} else {
 		ret.corners[1] += 2 << 3
 	}
 
-	if cubeList[2] < 2 {
+	if cubeList[2] < 3 {
 		ret.corners[2] += 0 << 3
-	} else if cubeList[21] < 2 {
+	} else if cubeList[21] < 3 {
 		ret.corners[2] += 1 << 3
 	} else {
 		ret.corners[2] += 2 << 3
 	}
 
-	if cubeList[0] < 2 {
+	if cubeList[0] < 3 {
 		ret.corners[3] += 0 << 3
-	} else if cubeList[12] < 2 {
+	} else if cubeList[12] < 3 {
 		ret.corners[3] += 1 << 3
 	} else {
 		ret.corners[3] += 2 << 3
 	}
 
-	if cubeList[51] < 2 {
+	if cubeList[51] < 3 {
 		ret.corners[4] += 0 << 3
-	} else if cubeList[40] < 2 {
+	} else if cubeList[40] < 3 {
 		ret.corners[4] += 1 << 3
 	} else {
 		ret.corners[4] += 2 << 3
 	}
 
-	if cubeList[53] < 2 {
+	if cubeList[53] < 3 {
 		ret.corners[5] += 0 << 3
-	} else if cubeList[43] < 2 {
+	} else if cubeList[43] < 3 {
 		ret.corners[5] += 1 << 3
 	} else {
 		ret.corners[5] += 2 << 3
 	}
 
-	if cubeList[61] < 2 {
+	if cubeList[61] < 3 {
 		ret.corners[6] += 0 << 3
-	} else if cubeList[46] < 2 {
+	} else if cubeList[46] < 3 {
 		ret.corners[6] += 1 << 3
 	} else {
 		ret.corners[6] += 2 << 3
 	}
 
-	if cubeList[59] < 2 {
+	if cubeList[59] < 3 {
 		ret.corners[7] += 0 << 3
-	} else if cubeList[49] < 2 {
+	} else if cubeList[49] < 3 {
 		ret.corners[7] += 1 << 3
 	} else {
 		ret.corners[7] += 2 << 3
 	}
-
-	ret.edges[0] = edgeTable[cubeList[9]+cubeList[16]]
-	ret.edges[1] = edgeTable[cubeList[6]+cubeList[19]]
-	ret.edges[2] = edgeTable[cubeList[1]+cubeList[22]]
-	ret.edges[3] = edgeTable[cubeList[4]+cubeList[13]]
-	ret.edges[4] = edgeTable[cubeList[27]+cubeList[28]]
-	ret.edges[5] = edgeTable[cubeList[30]+cubeList[31]]
-	ret.edges[6] = edgeTable[cubeList[33]+cubeList[34]]
-	ret.edges[7] = edgeTable[cubeList[36]+cubeList[25]]
-	ret.edges[8] = edgeTable[cubeList[52]+cubeList[42]]
-	ret.edges[9] = edgeTable[cubeList[57]+cubeList[45]]
-	ret.edges[10] = edgeTable[cubeList[60]+cubeList[48]]
-	ret.edges[11] = edgeTable[cubeList[55]+cubeList[39]]
-
-	ret.corners[0] = cornerTable[cubeList[8]+cubeList[14]+cubeList[15]]
-	ret.corners[1] = cornerTable[cubeList[10]+cubeList[17]+cubeList[18]]
-	ret.corners[2] = cornerTable[cubeList[2]+cubeList[20]+cubeList[21]]
-	ret.corners[3] = cornerTable[cubeList[0]+cubeList[23]+cubeList[12]]
-	ret.corners[4] = cornerTable[cubeList[40]+cubeList[41]+cubeList[51]]
-	ret.corners[5] = cornerTable[cubeList[43]+cubeList[44]+cubeList[53]]
-	ret.corners[6] = cornerTable[cubeList[46]+cubeList[47]+cubeList[61]]
-	ret.corners[7] = cornerTable[cubeList[38]+cubeList[49]+cubeList[59]]
 
 	return ret
 }
@@ -236,25 +236,25 @@ func swap(list []byte, a, b int) {
 	list[a], list[b] = list[b], list[a]
 }
 
-func (cube Cube) R() {
+func (cube *Cube) R() {
 	rotate(cube.corners[:], 1, 2, 6, 5)
-	rotate(cube.edges[:], 1, 5, 10, 6)
+	rotate(cube.edges[:], 6, 9, 5, 1)
 	cube.corners[1] = ((cube.corners[1]>>3+2)%3)<<3 + cube.corners[1]&0b111
 	cube.corners[2] = ((cube.corners[2]>>3+1)%3)<<3 + cube.corners[2]&0b111
 	cube.corners[5] = ((cube.corners[5]>>3+1)%3)<<3 + cube.corners[5]&0b111
 	cube.corners[6] = ((cube.corners[6]>>3+2)%3)<<3 + cube.corners[6]&0b111
 }
 
-func (cube Cube) R1() {
+func (cube *Cube) R1() {
 	rrotate(cube.corners[:], 1, 2, 6, 5)
-	rrotate(cube.edges[:], 1, 5, 10, 6)
+	rrotate(cube.edges[:], 6, 9, 5, 1)
 	cube.corners[1] = ((cube.corners[1]>>3+2)%3)<<3 + cube.corners[1]&0b111
 	cube.corners[2] = ((cube.corners[2]>>3+1)%3)<<3 + cube.corners[2]&0b111
 	cube.corners[5] = ((cube.corners[5]>>3+1)%3)<<3 + cube.corners[5]&0b111
 	cube.corners[6] = ((cube.corners[6]>>3+2)%3)<<3 + cube.corners[6]&0b111
 }
 
-func (cube Cube) R2() {
+func (cube *Cube) R2() {
 	swap(cube.corners[:], 1, 6)
 	swap(cube.corners[:], 2, 5)
 	swap(cube.edges[:], 5, 6)
@@ -264,6 +264,7 @@ func (cube Cube) R2() {
 func main() {
 	var cubeList, _ = ioutil.ReadFile("in")
 	var cube = makeCube(cubeList)
+	cube.R()
+	cube.R2()
 	fmt.Println(cube.isFinished())
-	fmt.Println(cube)
 }
