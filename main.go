@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"time"
 )
 
 // Cube Küpün kendisi
@@ -394,31 +395,147 @@ func (cube *Cube) B2() {
 	swap(cube.edges[:], 7, 6)
 }
 
+func rec(cube *Cube, depth int, last int) (string, bool) {
+	if cube.isFinished() {
+		return "", true
+	}
+	if depth == 0 {
+		return "", false
+	}
+	depth--
+
+	var sol string
+	var bol bool
+
+	if last != 1 {
+		cube.U()
+		sol, bol = rec(cube, depth, 1)
+		if bol {
+			return "U " + sol, true
+		}
+		cube.U()
+		sol, bol = rec(cube, depth, 1)
+		if bol {
+			return "U2 " + sol, true
+		}
+		cube.U()
+		sol, bol = rec(cube, depth, 1)
+		if bol {
+			return "U' " + sol, true
+		}
+		cube.U()
+	}
+	if last != 2 && last != 1 {
+		cube.D()
+		sol, bol = rec(cube, depth, 2)
+		if bol {
+			return "D " + sol, true
+		}
+		cube.D()
+		sol, bol = rec(cube, depth, 2)
+		if bol {
+			return "D2 " + sol, true
+		}
+		cube.D()
+		sol, bol = rec(cube, depth, 2)
+		if bol {
+			return "D' " + sol, true
+		}
+		cube.D()
+	}
+
+	if last != 3 {
+
+		cube.R()
+		sol, bol = rec(cube, depth, 3)
+		if bol {
+			return "R " + sol, true
+		}
+		cube.R()
+		sol, bol = rec(cube, depth, 3)
+		if bol {
+			return "R2 " + sol, true
+		}
+		cube.R()
+		sol, bol = rec(cube, depth, 3)
+		if bol {
+			return "R' " + sol, true
+		}
+		cube.R()
+	}
+
+	if last != 4 && last != 3 {
+
+		cube.L()
+		sol, bol = rec(cube, depth, 4)
+		if bol {
+			return "L " + sol, true
+		}
+		cube.L()
+		sol, bol = rec(cube, depth, 4)
+		if bol {
+			return "L2 " + sol, true
+		}
+		cube.L()
+		sol, bol = rec(cube, depth, 4)
+		if bol {
+			return "L' " + sol, true
+		}
+		cube.L()
+	}
+
+	if last != 5 {
+
+		cube.F()
+		sol, bol = rec(cube, depth, 5)
+		if bol {
+			return "F " + sol, true
+		}
+		cube.F()
+		sol, bol = rec(cube, depth, 5)
+		if bol {
+			return "F2 " + sol, true
+		}
+		cube.F()
+		sol, bol = rec(cube, depth, 5)
+		if bol {
+			return "F' " + sol, true
+		}
+		cube.F()
+
+	}
+	if last != 6 && last != 5 {
+
+		cube.B()
+		sol, bol = rec(cube, depth, 6)
+		if bol {
+			return "B " + sol, true
+		}
+		cube.B()
+		sol, bol = rec(cube, depth, 6)
+		if bol {
+			return "B2 " + sol, true
+		}
+		cube.B()
+		sol, bol = rec(cube, depth, 6)
+		if bol {
+			return "B' " + sol, true
+		}
+		cube.B()
+	}
+
+	return "", false
+
+}
+
 func main() {
 	var cubeList, _ = ioutil.ReadFile("in")
 	var cube = makeCube(cubeList)
-	fmt.Println(cube)
-	cube.R1()
-	cube.U1()
-	cube.L()
-	cube.D2()
-	cube.U1()
-	cube.L2()
-	cube.B2()
-	cube.L1()
-	cube.D1()
-	cube.F2()
-	cube.D2()
-	cube.U1()
-	cube.L2()
-	cube.R2()
-	cube.D()
-	cube.F1()
-	cube.L()
-	cube.B2()
-	cube.D1()
-	cube.F()
 
-	fmt.Println(cube.isFinished())
-	fmt.Println(cube)
+	var begin = time.Now()
+	var solution, success = rec(&cube, 8, 0)
+	fmt.Println(time.Since(begin))
+
+	fmt.Println(success)
+	fmt.Println(solution)
 }
