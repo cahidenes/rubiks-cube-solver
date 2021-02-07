@@ -102,7 +102,7 @@ func makeCube(cubeList []byte) Cube {
 		ret.edges[1] += 1 << 4
 	}
 
-	if cubeList[1] > cubeList[2] {
+	if cubeList[1] > cubeList[22] {
 		ret.edges[2] += 1 << 4
 	}
 
@@ -209,7 +209,7 @@ func makeCube(cubeList []byte) Cube {
 	return ret
 }
 
-func (cube Cube) isFinished() bool {
+func (cube *Cube) isFinished() bool {
 	for i, corner := range cube.corners {
 		if corner != byte(i) {
 			return false
@@ -261,10 +261,164 @@ func (cube *Cube) R2() {
 	swap(cube.edges[:], 1, 9)
 }
 
+func (cube *Cube) L() {
+	rotate(cube.corners[:], 0, 4, 7, 3)
+	rotate(cube.edges[:], 3, 4, 11, 7)
+	cube.corners[0] = ((cube.corners[0]>>3+1)%3)<<3 + cube.corners[0]&0b111
+	cube.corners[4] = ((cube.corners[4]>>3+2)%3)<<3 + cube.corners[4]&0b111
+	cube.corners[7] = ((cube.corners[7]>>3+1)%3)<<3 + cube.corners[7]&0b111
+	cube.corners[3] = ((cube.corners[3]>>3+2)%3)<<3 + cube.corners[3]&0b111
+}
+
+func (cube *Cube) L1() {
+	rrotate(cube.corners[:], 0, 4, 7, 3)
+	rrotate(cube.edges[:], 3, 4, 11, 7)
+	cube.corners[0] = ((cube.corners[0]>>3+1)%3)<<3 + cube.corners[0]&0b111
+	cube.corners[4] = ((cube.corners[4]>>3+2)%3)<<3 + cube.corners[4]&0b111
+	cube.corners[7] = ((cube.corners[7]>>3+1)%3)<<3 + cube.corners[7]&0b111
+	cube.corners[3] = ((cube.corners[3]>>3+2)%3)<<3 + cube.corners[3]&0b111
+}
+
+func (cube *Cube) L2() {
+	swap(cube.corners[:], 3, 4)
+	swap(cube.corners[:], 0, 7)
+	swap(cube.edges[:], 3, 11)
+	swap(cube.edges[:], 4, 7)
+}
+
+func (cube *Cube) U() {
+	rotate(cube.corners[:], 3, 2, 1, 0)
+	rotate(cube.edges[:], 3, 2, 1, 0)
+}
+
+func (cube *Cube) U1() {
+	rrotate(cube.corners[:], 3, 2, 1, 0)
+	rrotate(cube.edges[:], 3, 2, 1, 0)
+}
+
+func (cube *Cube) U2() {
+	swap(cube.corners[:], 0, 2)
+	swap(cube.corners[:], 1, 3)
+	swap(cube.edges[:], 0, 2)
+	swap(cube.edges[:], 1, 3)
+}
+
+func (cube *Cube) D() {
+	rotate(cube.corners[:], 4, 5, 6, 7)
+	rotate(cube.edges[:], 8, 9, 10, 11)
+}
+
+func (cube *Cube) D1() {
+	rrotate(cube.corners[:], 4, 5, 6, 7)
+	rrotate(cube.edges[:], 8, 9, 10, 11)
+}
+
+func (cube *Cube) D2() {
+	swap(cube.corners[:], 4, 6)
+	swap(cube.corners[:], 5, 7)
+	swap(cube.edges[:], 8, 10)
+	swap(cube.edges[:], 9, 11)
+}
+
+func (cube *Cube) F() {
+	rotate(cube.corners[:], 0, 1, 5, 4)
+	rotate(cube.edges[:], 0, 5, 8, 4)
+
+	cube.corners[0] = ((cube.corners[0]>>3+2)%3)<<3 + cube.corners[0]&0b111
+	cube.corners[1] = ((cube.corners[1]>>3+1)%3)<<3 + cube.corners[1]&0b111
+	cube.corners[5] = ((cube.corners[5]>>3+2)%3)<<3 + cube.corners[5]&0b111
+	cube.corners[4] = ((cube.corners[4]>>3+1)%3)<<3 + cube.corners[4]&0b111
+
+	cube.edges[0] ^= 1 << 4
+	cube.edges[5] ^= 1 << 4
+	cube.edges[8] ^= 1 << 4
+	cube.edges[4] ^= 1 << 4
+}
+
+func (cube *Cube) F1() {
+	rrotate(cube.corners[:], 0, 1, 5, 4)
+	rrotate(cube.edges[:], 0, 5, 8, 4)
+
+	cube.corners[0] = ((cube.corners[0]>>3+2)%3)<<3 + cube.corners[0]&0b111
+	cube.corners[1] = ((cube.corners[1]>>3+1)%3)<<3 + cube.corners[1]&0b111
+	cube.corners[5] = ((cube.corners[5]>>3+2)%3)<<3 + cube.corners[5]&0b111
+	cube.corners[4] = ((cube.corners[4]>>3+1)%3)<<3 + cube.corners[4]&0b111
+
+	cube.edges[0] ^= 1 << 4
+	cube.edges[5] ^= 1 << 4
+	cube.edges[8] ^= 1 << 4
+	cube.edges[4] ^= 1 << 4
+}
+
+func (cube *Cube) F2() {
+	swap(cube.corners[:], 0, 5)
+	swap(cube.corners[:], 1, 4)
+	swap(cube.edges[:], 0, 8)
+	swap(cube.edges[:], 5, 4)
+}
+
+func (cube *Cube) B() {
+	rotate(cube.corners[:], 2, 3, 7, 6)
+	rotate(cube.edges[:], 2, 7, 10, 6)
+
+	cube.corners[2] = ((cube.corners[2]>>3+2)%3)<<3 + cube.corners[2]&0b111
+	cube.corners[3] = ((cube.corners[3]>>3+1)%3)<<3 + cube.corners[3]&0b111
+	cube.corners[7] = ((cube.corners[7]>>3+2)%3)<<3 + cube.corners[7]&0b111
+	cube.corners[6] = ((cube.corners[6]>>3+1)%3)<<3 + cube.corners[6]&0b111
+
+	cube.edges[2] ^= 1 << 4
+	cube.edges[7] ^= 1 << 4
+	cube.edges[10] ^= 1 << 4
+	cube.edges[6] ^= 1 << 4
+}
+
+func (cube *Cube) B1() {
+	rrotate(cube.corners[:], 2, 3, 7, 6)
+	rrotate(cube.edges[:], 2, 7, 10, 6)
+
+	cube.corners[2] = ((cube.corners[2]>>3+2)%3)<<3 + cube.corners[2]&0b111
+	cube.corners[3] = ((cube.corners[3]>>3+1)%3)<<3 + cube.corners[3]&0b111
+	cube.corners[7] = ((cube.corners[7]>>3+2)%3)<<3 + cube.corners[7]&0b111
+	cube.corners[6] = ((cube.corners[6]>>3+1)%3)<<3 + cube.corners[6]&0b111
+
+	cube.edges[2] ^= 1 << 4
+	cube.edges[7] ^= 1 << 4
+	cube.edges[10] ^= 1 << 4
+	cube.edges[6] ^= 1 << 4
+}
+
+func (cube *Cube) B2() {
+	swap(cube.corners[:], 2, 7)
+	swap(cube.corners[:], 3, 6)
+	swap(cube.edges[:], 2, 10)
+	swap(cube.edges[:], 7, 6)
+}
+
 func main() {
 	var cubeList, _ = ioutil.ReadFile("in")
 	var cube = makeCube(cubeList)
-	cube.R()
+	fmt.Println(cube)
+	cube.R1()
+	cube.U1()
+	cube.L()
+	cube.D2()
+	cube.U1()
+	cube.L2()
+	cube.B2()
+	cube.L1()
+	cube.D1()
+	cube.F2()
+	cube.D2()
+	cube.U1()
+	cube.L2()
 	cube.R2()
+	cube.D()
+	cube.F1()
+	cube.L()
+	cube.B2()
+	cube.D1()
+	cube.F()
+
 	fmt.Println(cube.isFinished())
+	fmt.Println(cube)
 }
