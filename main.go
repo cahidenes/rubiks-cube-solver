@@ -400,6 +400,15 @@ func rec(cube *Cube, depth int, last int) (string, bool) {
 		return "", true
 	}
 	if depth == 0 {
+		var f, s = findWhich(cube, 1)
+		f()
+		if cube.isFinished() {
+			return s, true
+		} else {
+			f()
+			f()
+			f()
+		}
 		return "", false
 	}
 	depth--
@@ -528,14 +537,355 @@ func rec(cube *Cube, depth int, last int) (string, bool) {
 
 }
 
+func doTest(cube *Cube, testNumber int) bool {
+	if testNumber < 24*8 {
+		return int(cube.corners[testNumber%8]) == testNumber/8
+	}
+	testNumber -= 24 * 8
+	if testNumber < 24*12 {
+		return int(cube.edges[testNumber%12]) == testNumber/12
+	}
+	panic("test limit (480) exceeded")
+}
+
+var l, l_size = [10000]Cube{}, 0
+var l1, l1_size = [10000]Cube{}, 0
+var l2, l2_size = [10000]Cube{}, 0
+
+var r, r_size = [10000]Cube{}, 0
+var r1, r1_size = [10000]Cube{}, 0
+var r2, r2_size = [10000]Cube{}, 0
+
+var u, u_size = [10000]Cube{}, 0
+var u1, u1_size = [10000]Cube{}, 0
+var u2, u2_size = [10000]Cube{}, 0
+
+var d, d_size = [10000]Cube{}, 0
+var d1, d1_size = [10000]Cube{}, 0
+var d2, d2_size = [10000]Cube{}, 0
+
+var f, f_size = [10000]Cube{}, 0
+var f1, f1_size = [10000]Cube{}, 0
+var f2, f2_size = [10000]Cube{}, 0
+
+var b, b_size = [10000]Cube{}, 0
+var b1, b1_size = [10000]Cube{}, 0
+var b2, b2_size = [10000]Cube{}, 0
+
+func rulesRec(cube Cube, depth int, last int, number int) {
+	if depth == 0 {
+		if last == 1 {
+			if number == 1 {
+				u1[u1_size] = cube
+				u1_size++
+			} else if number == 2 {
+				u2[u2_size] = cube
+				u2_size++
+			} else {
+				u[u_size] = cube
+				u_size++
+			}
+		} else if last == 2 {
+			if number == 1 {
+				d1[d1_size] = cube
+				d1_size++
+			} else if number == 2 {
+				d2[d2_size] = cube
+				d2_size++
+			} else {
+				d[d_size] = cube
+				d_size++
+			}
+		} else if last == 3 {
+			if number == 1 {
+				r1[r1_size] = cube
+				r1_size++
+			} else if number == 2 {
+				r2[r2_size] = cube
+				r2_size++
+			} else {
+				r[r_size] = cube
+				r_size++
+			}
+		} else if last == 4 {
+			if number == 1 {
+				l1[l1_size] = cube
+				l1_size++
+			} else if number == 2 {
+				l2[l2_size] = cube
+				l2_size++
+			} else {
+				l[l_size] = cube
+				l_size++
+			}
+		} else if last == 5 {
+			if number == 1 {
+				f1[f1_size] = cube
+				f1_size++
+			} else if number == 2 {
+				f2[f2_size] = cube
+				f2_size++
+			} else {
+				f[f_size] = cube
+				f_size++
+			}
+		} else if last == 6 {
+			if number == 1 {
+				b1[b1_size] = cube
+				b1_size++
+			} else if number == 2 {
+				b2[b2_size] = cube
+				b2_size++
+			} else {
+				b[b_size] = cube
+				b_size++
+			}
+		}
+		return
+	}
+	depth--
+
+	if last != 1 {
+		cube.U()
+		rulesRec(cube, depth, 1, 1)
+		cube.U()
+		rulesRec(cube, depth, 1, 2)
+		cube.U()
+		rulesRec(cube, depth, 1, 3)
+		cube.U()
+	}
+	if last != 2 && last != 1 {
+		cube.D()
+		rulesRec(cube, depth, 2, 1)
+		cube.D()
+		rulesRec(cube, depth, 2, 2)
+		cube.D()
+		rulesRec(cube, depth, 2, 3)
+		cube.D()
+	}
+
+	if last != 3 {
+
+		cube.R()
+		rulesRec(cube, depth, 3, 1)
+		cube.R()
+		rulesRec(cube, depth, 3, 2)
+		cube.R()
+		rulesRec(cube, depth, 3, 3)
+		cube.R()
+	}
+
+	if last != 4 && last != 3 {
+
+		cube.L()
+		rulesRec(cube, depth, 4, 1)
+		cube.L()
+		rulesRec(cube, depth, 4, 2)
+		cube.L()
+		rulesRec(cube, depth, 4, 3)
+		cube.L()
+	}
+
+	if last != 5 {
+
+		cube.F()
+		rulesRec(cube, depth, 5, 1)
+		cube.F()
+		rulesRec(cube, depth, 5, 2)
+		cube.F()
+		rulesRec(cube, depth, 5, 3)
+		cube.F()
+
+	}
+	if last != 6 && last != 5 {
+
+		cube.B()
+		rulesRec(cube, depth, 6, 1)
+		cube.B()
+		rulesRec(cube, depth, 6, 2)
+		cube.B()
+		rulesRec(cube, depth, 6, 3)
+		cube.B()
+	}
+}
+
+// func findRules(level int) {
+// 	var cube Cube
+// 	for i := 0; i < 8; i++ {
+// 		cube.corners[i] = byte(i)
+// 	}
+// 	for i := 0; i < 12; i++ {
+// 		cube.edges[i] = byte(i)
+// 	}
+// 	rulesRec(cube, level, 0, 0)
+
+// 	for i := 0; i < 480; i++ {
+// 		var allCorrect = 0
+// 		var allWrong = 0
+
+// 		var listlist = [][10000]Cube{u, u1, u2, d, d1, d2, r, r1, r2, l, l1, l2, f, f1, f2, b, b1, b2}
+// 		var sizelist = []int{u_size, u1_size, u2_size, d_size, d1_size, d2_size, r_size, r1_size, r2_size, l_size, l1_size, l2_size, f_size, f1_size, f2_size, b_size, b1_size, b2_size}
+
+// 		// fmt.Printf("%d ", i)
+
+// 		// var whichcorrect = -1
+
+// 		for j := 0; j < 18; j++ {
+// 			var allCorrectBool = true
+// 			var allWrongBool = true
+// 			for k := 0; k < sizelist[j]; k++ {
+// 				if doTest(listlist[j][k], i) {
+// 					allWrongBool = false
+// 				} else {
+// 					allCorrectBool = false
+// 				}
+// 			}
+// 			if true {
+// 				if allCorrectBool {
+// 					allCorrect++
+// 				} else if allWrongBool {
+// 					allWrong++
+// 				}
+// 			}
+
+// 			if allCorrectBool {
+// 				fmt.Print("1")
+// 				// whichcorrect = j
+// 			} else if allWrongBool {
+// 				fmt.Print("0")
+// 			} else {
+// 				fmt.Print("-")
+// 			}
+// 		}
+// 		fmt.Println()
+
+// 		// if allCorrect+allWrong == 18 {
+// 		// 	if allCorrect == 1 {
+// 		// 		fmt.Printf("---------- %d -------------!!!\n", whichcorrect)
+// 		// 	}
+// 		// }
+
+// 	}
+
+// }
+
+// ---: 012345678901234567
+// 0  : 000111111000000111
+// 9  : 000111000111000111
+// 18 : 000111000111111000
+// 1  : 100000000000000000
+// 3  : 010000000000000000
+// 2  : 001000000000000000
+// 39 : 000100000000000000
+// 37 : 000010000000000000
+// 38 : 000001000000000000
+// 77 : 000000100000000000
+// 74 : 000000010000000000
+// 213: 000000001000000000
+// 188: 000000000100000000
+// 187: 000000000010000000
+// 239: 000000000001000000
+// 388: 000000000000100000
+// 389: 000000000000010000
+// 5  : 000000000000001000
+// 414: 000000000000000100
+// 415: 000000000000000010
+// 23 : 000000000000000001
+
+func findWhich(cube *Cube, level int) (func(), string) {
+	if level == 1 {
+		if doTest(cube, 63) == true {
+			if doTest(cube, 309) == true {
+				if doTest(cube, 296) == true {
+					if doTest(cube, 230) == true {
+						return cube.U1, "U1"
+					} else {
+						if doTest(cube, 229) == true {
+							return cube.U2, "U2"
+						} else {
+							return cube.U, "U"
+						}
+					}
+				} else {
+					if doTest(cube, 452) == true {
+						return cube.F1, "F1"
+					} else {
+						if doTest(cube, 444) == true {
+							return cube.F, "F"
+						} else {
+							return cube.F2, "F2"
+						}
+					}
+				}
+			} else {
+				if doTest(cube, 306) == true {
+					return cube.R, "R"
+				} else {
+					if doTest(cube, 305) == true {
+						return cube.R1, "R1"
+					} else {
+						return cube.R2, "R2"
+					}
+				}
+			}
+		} else {
+			if doTest(cube, 335) == true {
+				if doTest(cube, 478) == true {
+					return cube.B1, "B1"
+				} else {
+					if doTest(cube, 470) == true {
+						return cube.B, "B"
+					} else {
+						return cube.B2, "B2"
+					}
+				}
+			} else {
+				if doTest(cube, 322) == true {
+					if doTest(cube, 331) == true {
+						return cube.L1, "L1"
+					} else {
+						if doTest(cube, 328) == true {
+							return cube.L, "L"
+						} else {
+							return cube.L2, "L2"
+						}
+					}
+				} else {
+					if doTest(cube, 334) == true {
+						return cube.D, "D"
+					} else {
+						if doTest(cube, 333) == true {
+							return cube.D2, "D2"
+						} else {
+							return cube.D1, "D1"
+						}
+					}
+				}
+			}
+		}
+	} else if level == 2 {
+
+	} else if level == 3 {
+
+	} else if level == 4 {
+
+	}
+	return nil, ""
+}
+
 func main() {
 	var cubeList, _ = ioutil.ReadFile("in")
 	var cube = makeCube(cubeList)
 
 	var begin = time.Now()
-	var solution, success = rec(&cube, 8, 0)
+	var solution, success = rec(&cube, 7, 0)
 	fmt.Println(time.Since(begin))
-
 	fmt.Println(success)
 	fmt.Println(solution)
+
+	// findRules(2)
+
+	// cube.L()
+	// var _, str = findWhich(cube)
+	// fmt.Println(str)
 }
