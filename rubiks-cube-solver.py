@@ -720,52 +720,6 @@ while True:
                             enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
                             enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
 
-                    cube_text = ''
-                    c = 0
-                    for j in range(3):
-                        for i in range(3):
-                            cube_text += str(kup[c])
-                            c += 1
-                        cube_text += '\n'
-                    cube_text_1 = ''
-                    cube_text_2 = ''
-                    cube_text_3 = ''
-                    for i in range(4):
-                        cube_text_1 += str(kup[c])
-                        c += 1
-                        cube_text_1 += str(kup[c])
-                        c += 1
-                        cube_text_1 += str(kup[c])
-                        c += 1
-                        cube_text_2 += str(kup[c])
-                        c += 1
-                        cube_text_2 += str(kup[c])
-                        c += 1
-                        cube_text_2 += str(kup[c])
-                        c += 1
-                        cube_text_3 += str(kup[c])
-                        c += 1
-                        cube_text_3 += str(kup[c])
-                        c += 1
-                        cube_text_3 += str(kup[c])
-                        c += 1
-                    cube_text += cube_text_1 + '\n' + cube_text_2 + '\n' + cube_text_3 + '\n'
-                    for j in range(3):
-                        for i in range(3):
-                            cube_text += str(kup[c])
-                            c += 1
-                        cube_text += '\n'
-                    cube_text = cube_text.replace('0', 'W')
-                    cube_text = cube_text.replace('1', 'R')
-                    cube_text = cube_text.replace('2', 'O')
-                    cube_text = cube_text.replace('3', 'Y')
-                    cube_text = cube_text.replace('4', 'G')
-                    cube_text = cube_text.replace('5', 'B')
-
-                    cikti = open('in', 'w')
-                    cikti.write(cube_text)
-                    cikti.close()
-                                        
                     altered = kup[0:9] + kup[27:36] + kup[18:27] + kup[45:54] + kup[9:18] + kup[36:45]
                     # print(altered)
                     kociemba_text = str(altered).replace('[', '').replace(']', '').replace(',', '').replace(' ', '')
