@@ -12,7 +12,11 @@ DEBUG = False
 cam = cv.VideoCapture(0)
 
 eps = 0.00001
+cam.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
 W, H = int(cam.get(cv.CAP_PROP_FRAME_WIDTH)), int(cam.get(cv.CAP_PROP_FRAME_HEIGHT))
+
+if W != 1280 or H != 720:
+    print("WARNING!!! This software was prepared according to 1280x720 camera resolution, but your resolution is %dx%d, this may or may not cause problems" % (W, H))
 
 firstRead = []
 secondRead = []
@@ -371,10 +375,14 @@ while True:
 # ------------------------------ Edge Detection ------------------------------ #
     blur = cv.medianBlur(raw, 7)
 
-    raw = cv.rectangle(raw, (0, H-40), (W, H), (55, 55, 55), -1)
     if firstDone == False:
+        raw = cv.rectangle(raw, (0, H-40), (W, H), (55, 55, 55), -1)
         raw = cv.putText(raw, "Show one corner of the cube to the camera, Q to exit", (10, H-12), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
     else:
+        raw = cv.circle(raw, (40, H-50), 100, (255, 255, 255), -1)
+        raw = cv.line(raw, (40, H-50), (100, H-110), (0, 150, 0), 10)
+        raw = cv.line(raw, (10, H-80), (40, H-50), (0, 150, 0), 10)
+        raw = cv.rectangle(raw, (0, H-40), (W, H), (55, 55, 55), -1)
         raw = cv.putText(raw, "Now show the opposite corner to the camera, Q to exit", (10, H-12), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
 
 
