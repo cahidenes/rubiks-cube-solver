@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 import random
+import kociemba
 try:
     import clipboard
 except:
@@ -11,13 +12,20 @@ DEBUG = False
 cam = cv.VideoCapture(0)
 
 eps = 0.00001
-W, H = cam.get(cv.CAP_PROP_FRAME_WIDTH), cam.get(cv.CAP_PROP_FRAME_HEIGHT)
+W, H = int(cam.get(cv.CAP_PROP_FRAME_WIDTH)), int(cam.get(cv.CAP_PROP_FRAME_HEIGHT))
 
 firstRead = []
 secondRead = []
 
 firstDone = False
 secondDone = False
+
+color_white = (255, 255, 255)
+color_yellow = (0, 255, 255)
+color_red = (0, 0, 255)
+color_orange = (0, 162, 255)
+color_green = (0, 255, 0)
+color_blue = (255, 0, 0)
 
 def dist(p1, p2):
     return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
@@ -322,17 +330,17 @@ def doldur(kup, face, up):
 
 def getcolor(code):
     if code == 0:
-        return (255, 255, 255)
+        return color_white
     elif code == 1:
-        return (0, 0, 255)
+        return color_red
     elif code == 2:
-        return (0, 162, 255)
+        return color_orange
     elif code == 3:
-        return (0, 255, 255)
+        return color_yellow
     elif code == 4:
-        return (0, 255, 0)
+        return color_green
     elif code == 5:
-        return (255, 0, 0)
+        return color_blue
     else:
         error_im = np.zeros(raw.shape, np.uint8)
         error_im = cv.putText(error_im, 'Scanning is not successful :(', (10, 60), cv.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
@@ -359,14 +367,16 @@ while True:
         break
 
     raw = cv.flip(raw, 1)
-    if firstDone:
-        raw = cv.circle(raw, (100, 100), 50, (0, 255, 0), -1)
-    if secondDone:
-        raw = cv.circle(raw, (100, 200), 50, (0, 255, 0), -1)
-
 
 # ------------------------------ Edge Detection ------------------------------ #
     blur = cv.medianBlur(raw, 7)
+
+    raw = cv.rectangle(raw, (0, H-40), (W, H), (55, 55, 55), -1)
+    if firstDone == False:
+        raw = cv.putText(raw, "Show one corner of the cube to the camera, Q to exit", (10, H-12), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+    else:
+        raw = cv.putText(raw, "Now show the opposite corner to the camera, Q to exit", (10, H-12), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+
 
     canny = cv.Canny(blur, 50, 150)
     scanning_areas = canny.copy()
@@ -650,7 +660,7 @@ while True:
                     doldur(kup, nerede[45:54], nerede[31])
 
 
-                    enson = np.zeros((490 + 30, 650, 3), np.uint8)
+                    enson = np.zeros((H, W, 3), np.uint8)
                     
                     seperatorThickness = 2
                     for i in range(3):
@@ -743,18 +753,81 @@ while True:
                     cube_text = cube_text.replace('3', 'Y')
                     cube_text = cube_text.replace('4', 'G')
                     cube_text = cube_text.replace('5', 'B')
-                    
+
+                    cikti = open('in', 'w')
+                    cikti.write(cube_text)
+                    cikti.close()
+                                        
+                    altered = kup[0:9] + kup[27:36] + kup[18:27] + kup[45:54] + kup[9:18] + kup[36:45]
+                    # print(altered)
+                    kociemba_text = str(altered).replace('[', '').replace(']', '').replace(',', '').replace(' ', '')
+                    kociemba_text = kociemba_text.replace('0', 'U')
+                    kociemba_text = kociemba_text.replace('1', 'B')
+                    kociemba_text = kociemba_text.replace('2', 'F')
+                    kociemba_text = kociemba_text.replace('3', 'D')
+                    kociemba_text = kociemba_text.replace('4', 'R')
+                    kociemba_text = kociemba_text.replace('5', 'L')
+                    # print(kociemba_text)
+                    solution = ""
                     try:
-                        clipboard.copy(cube_text)
-                        enson = cv.putText(enson, 'Copied to clipboard! Press Enter to exit', (10, 510), cv.FONT_HERSHEY_SIMPLEX, 1, ((255, 255, 255)),)
+                        solution = kociemba.solve(kociemba_text)
                     except:
-                        enson = cv.putText(enson, 'Press Enter to exit', (10, 510), cv.FONT_HERSHEY_SIMPLEX, 1, ((255, 255, 255)),)
+                        solution = "Sorry, this cube cannot be solved. Try again"
                     
+                    enson = cv.putText(enson, "White on top, Orange in front", (10, 520), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+                    enson = cv.putText(enson, solution, (10, 560), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+                    enson = cv.putText(enson, "R to retry, Q to quit", (10, 600), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+
+                    dx = (W - 650) // 6
+                    dy = 500 // 4
+
+                    if solution[0] != 'S':
+                        solution_array = solution.split()
+                        for j in range(4):
+                            for i in range(6):
+                                number = j*6 + i
+                                if len(solution_array) <= number:
+                                    break
+                                center = 650 + i*dx + dx//2, j*dy + dy//2
+                                minax = min(dx, dy)
+                                color = (0, 0, 0)
+                                if solution_array[number][0] == 'U':
+                                    color = color_white[0], color_white[1], color_white[2]
+                                elif solution_array[number][0] == 'L':
+                                    color = color_blue[0], color_blue[1], color_blue[2]
+                                elif solution_array[number][0] == 'F':
+                                    color = color_orange[0], color_orange[1], color_orange[2]
+                                elif solution_array[number][0] == 'R':
+                                    color = color_green[0], color_green[1], color_green[2]
+                                elif solution_array[number][0] == 'B':
+                                    color = color_red[0], color_red[1], color_red[2]
+                                elif solution_array[number][0] == 'D':
+                                    color = color_yellow[0], color_yellow[1], color_yellow[2]
+                                enson = cv.rectangle(enson, (center[0] - int(minax*0.2), center[1] - int(minax*0.2)), (center[0] + int(minax*0.2), center[1] + int(minax*0.2)), color, -1)
+                                if len(solution_array[number]) == 1:
+                                    enson = cv.ellipse(enson, center, (int(minax*0.4), int(minax*0.4)), 0, -90, 0, (0, 255, 0), 3)
+                                    enson = cv.line(enson, (center[0] + int(minax*0.4), center[1]), (center[0] + int(minax*0.4) + int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                    enson = cv.line(enson, (center[0] + int(minax*0.4), center[1]), (center[0] + int(minax*0.4) - int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                elif solution_array[number][1] == "'":
+                                    enson = cv.ellipse(enson, center, (int(minax*0.4), int(minax*0.4)), 0, -90, -180, (0, 255, 0), 3)
+                                    enson = cv.line(enson, (center[0] - int(minax*0.4), center[1]), (center[0] - int(minax*0.4) + int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                    enson = cv.line(enson, (center[0] - int(minax*0.4), center[1]), (center[0] - int(minax*0.4) - int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                else:
+                                    enson = cv.ellipse(enson, center, (int(minax*0.4), int(minax*0.4)), 0, -90, 90, (0, 255, 0), 3)
+                                    enson = cv.line(enson, (center[0], center[1] + int(minax*0.4)), (center[0] + int(minax*0.05), center[1] + int(minax*0.4) - int(minax*0.05)), (0, 255, 0), 3)
+                                    enson = cv.line(enson, (center[0], center[1] + int(minax*0.4)), (center[0] + int(minax*0.05), center[1] + int(minax*0.4) + int(minax*0.05)), (0, 255, 0), 3)
+
 
                     cv.imshow('raw', enson)
-                    cv.waitKey()
-
-                    exit(0)
+                    while True:
+                        option = cv.waitKey() & 0xff
+                        if option == ord('r') or option == ord('R'):
+                            firstDone = False
+                            firstRead = []
+                            secondRead = []
+                            break
+                        elif option == ord('q') or option == ord('Q'):
+                            exit(0)
 
 
         # cv.imshow('canny dilated', canny_d)
@@ -770,5 +843,5 @@ while True:
         cv.imshow('raw', raw)    
 
     key = cv.waitKey(20)
-    if key == ord('q'):
+    if key == ord('q') or key == ord('Q'):
         break
