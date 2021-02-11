@@ -1,28 +1,18 @@
 import cv2 as cv
 import numpy as np
-import random
 import kociemba
-try:
-    import clipboard
-except:
-    pass
 
 DEBUG = False
-
-cam = cv.VideoCapture(0)
-
 eps = 0.00001
-cam.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
-W, H = int(cam.get(cv.CAP_PROP_FRAME_WIDTH)), int(cam.get(cv.CAP_PROP_FRAME_HEIGHT))
-
-if W != 1280 or H != 720:
-    print("WARNING!!! This software was prepared according to 1280x720 camera resolution, but your resolution is %dx%d, this may or may not cause problems" % (W, H))
-
 firstRead = []
 secondRead = []
-
 firstDone = False
-secondDone = False
+
+cam = cv.VideoCapture(0)
+cam.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
+W, H = int(cam.get(cv.CAP_PROP_FRAME_WIDTH)), int(cam.get(cv.CAP_PROP_FRAME_HEIGHT))
+if W != 1280 or H != 720:
+    print("WARNING!!! This software was prepared according to 1280x720 camera resolution, but your resolution is %dx%d, this may or may not cause problems" % (W, H))
 
 color_white = (255, 255, 255)
 color_yellow = (0, 255, 255)
@@ -31,16 +21,16 @@ color_orange = (0, 162, 255)
 color_green = (0, 255, 0)
 color_blue = (255, 0, 0)
 
-def dist(p1, p2):
+def distance(p1, p2):
     return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
 
-def cikar(p1, p2):
+def minus(p1, p2):
     return (p1[0] - p2[0], p1[1] - p2[1])
 
-def topla(p1, p2):
+def plus(p1, p2):
     return (p1[0] + p2[0], p1[1] + p2[1])
 
-def carp(a, p):
+def times(a, p):
     return (a*p[0], a*p[1])
 
 def length(p):
@@ -52,9 +42,6 @@ def area(l):
         alan += l[i][0]*l[i-1][1] - l[i-1][0]*l[i][1]
     return abs(alan/2)
 
-def cdist(color1, color2):
-    return ((color1[0] - color2[0])**2 + (color1[1] - color2[1])**2 + (color1[2] - color2[2])**2)**0.5
-
 def turnHSV(arr):
     tmp = np.zeros((1, len(arr), 3), np.uint8)
     for i in range(len(arr)):
@@ -64,7 +51,7 @@ def turnHSV(arr):
         arr[i] = [(float(tmp[0][i][0] + 30) % 180), float(tmp[0][i][1]), float(tmp[0][i][2]), i]
     return np.array(arr)
 
-def doldur(kup, face, up):
+def fill(kup, face, up):
     if face[4] == 0:
         x = 0
         if up == 1:
@@ -347,23 +334,16 @@ def getcolor(code):
         return color_blue
     else:
         error_im = np.zeros(raw.shape, np.uint8)
-        error_im = cv.putText(error_im, 'Scanning is not successful :(', (10, 60), cv.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
+        error_im = cv.putText(error_im, 'Unexpected error occured :(', (10, 60), cv.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
         error_im = cv.putText(error_im, 'Press Enter to exit', (10, 180), cv.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
-        cv.imshow('raw', error_im)
+        cv.imshow("Rubik's Cube Solver", error_im)
         cv.waitKey()
         exit(1)
 
-def kesisim(x1, y1, x2, y2, x3, y3, x4, y4):
+def intersection(x1, y1, x2, y2, x3, y3, x4, y4):
     ax = (x3*(y4-y3)/(x4-x3) - x1*(y2-y1)/(x2-x1) + y1 - y3)/((y4-y3)/(x4-x3) - (y2-y1)/(x2-x1))
     ay = (ax-x1)*(y2-y1)/(x2-x1) + y1
     return ax, ay
-
-# beyaz = 0
-# kirmizi = 1
-# turuncu = 2
-# sari = 3
-# yesil = 4
-# mavi = 5
 
 while True:
     isTrue, raw = cam.read()
@@ -371,9 +351,6 @@ while True:
         break
 
     raw = cv.flip(raw, 1)
-
-# ------------------------------ Edge Detection ------------------------------ #
-    blur = cv.medianBlur(raw, 7)
 
     if firstDone == False:
         raw = cv.rectangle(raw, (0, H-40), (W, H), (55, 55, 55), -1)
@@ -385,11 +362,14 @@ while True:
         raw = cv.rectangle(raw, (0, H-40), (W, H), (55, 55, 55), -1)
         raw = cv.putText(raw, "Now show the opposite corner to the camera, Q to exit", (10, H-12), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
 
-
+    #* canny edge detection
+    blur = cv.medianBlur(raw, 7)
     canny = cv.Canny(blur, 50, 150)
     scanning_areas = canny.copy()
     canny_gray = canny.copy()
     canny = cv.cvtColor(canny, cv.COLOR_GRAY2BGR)
+
+    #* Draw cube skeleton
     pts = np.array([
         [665, 115], 
         [885, 200], 
@@ -398,15 +378,9 @@ while True:
         [490, 434], 
         [454, 211]
         ], np.int32)
-
     pts.reshape((-1, 1, 2))
-
     if DEBUG:
         canny = cv.polylines(canny, [pts], True, (0, 255, 0), 3)
-        # canny = cv.line(canny, (885, 200), (675, 342), (0, 255, 0), 3)
-        # canny = cv.line(canny, (675, 571), (675, 342), (0, 255, 0), 3)
-        # canny = cv.line(canny, (454, 211), (675, 342), (0, 255, 0), 3)
-
         canny = cv.circle(canny, (675, 342), 30, (0, 0, 255))
         canny = cv.circle(canny, (675, 342), 50, (0, 0, 255))
     else:
@@ -414,331 +388,306 @@ while True:
         raw = cv.line(raw, (885, 200), (675, 342), (0, 255, 0), 3)
         raw = cv.line(raw, (675, 571), (675, 342), (0, 255, 0), 3)
         raw = cv.line(raw, (454, 211), (675, 342), (0, 255, 0), 3)
+    cube_area = area(pts)
 
-    alan = area(pts)
-    # print(alan)
-
-    p1 = []
-    p2 = []
-
+    #* Draw two circles centered at the corner, find intersection points with edges
+    little_circle_points = []
+    big_circle_points = []
     points = cv.ellipse2Poly((675, 342), (30, 30), 0, 0, 360, 1)
     for (x, y) in points:
         if canny_gray[y, x] == 255:
-            if len(p1) == 0 or dist((x, y), p1[-1]) > 30:
-                p1.append((x, y))
-
+            if len(little_circle_points) == 0 or distance((x, y), little_circle_points[-1]) > 30:
+                little_circle_points.append((x, y))
     points = cv.ellipse2Poly((675, 342), (50, 50), 0, 0, 360, 1)
     for (x, y) in points:
         if canny_gray[y, x] == 255:
-            if len(p2) == 0 or dist((x, y), p2[-1]) > 30:
-                p2.append((x, y))
+            if len(big_circle_points) == 0 or distance((x, y), big_circle_points[-1]) > 30:
+                big_circle_points.append((x, y))
 
-    full = False
-    if len(p1) > 0 and len(p2) > 0 and dist(p1[0], p2[0]) < 22:
-        canny = cv.line(canny, p1[0], p2[0], (0, 255, 0), 2)
-    if len(p1) > 1 and len(p2) > 1 and dist(p1[1], p2[1]) < 22:
-        canny = cv.line(canny, p1[1], p2[1], (0, 255, 0), 2)
-    if len(p1) > 2 and len(p2) > 2 and dist(p1[2], p2[2]) < 22:
-        canny = cv.line(canny, p1[2], p2[2], (0, 255, 0), 2)
-        full = True
+    all_edges_found = False
+    if len(little_circle_points) > 0 and len(big_circle_points) > 0 and distance(little_circle_points[0], big_circle_points[0]) < 22:
+        canny = cv.line(canny, little_circle_points[0], big_circle_points[0], (0, 255, 0), 2)
+    if len(little_circle_points) > 1 and len(big_circle_points) > 1 and distance(little_circle_points[1], big_circle_points[1]) < 22:
+        canny = cv.line(canny, little_circle_points[1], big_circle_points[1], (0, 255, 0), 2)
+    if len(little_circle_points) > 2 and len(big_circle_points) > 2 and distance(little_circle_points[2], big_circle_points[2]) < 22:
+        canny = cv.line(canny, little_circle_points[2], big_circle_points[2], (0, 255, 0), 2)
+        all_edges_found = True
 
-    if full:
-        x1, y1 = p1[0][0] + eps, p1[0][1] + eps
-        x2, y2 = p2[0][0], p2[0][1]
-        x3, y3 = p1[1][0] + eps, p1[1][1] + eps
-        x4, y4 = p2[1][0], p2[1][1]
-        x5, y5 = p1[2][0] + eps, p1[2][1] + eps
-        x6, y6 = p2[2][0], p2[2][1]
+    if all_edges_found:
+        #* All found points
+        x1, y1 = little_circle_points[0][0] + eps, little_circle_points[0][1] + eps
+        x2, y2 = big_circle_points[0][0], big_circle_points[0][1]
+        x3, y3 = little_circle_points[1][0] + eps, little_circle_points[1][1] + eps
+        x4, y4 = big_circle_points[1][0], big_circle_points[1][1]
+        x5, y5 = little_circle_points[2][0] + eps, little_circle_points[2][1] + eps
+        x6, y6 = big_circle_points[2][0], big_circle_points[2][1]
 
-        # print(x1, y1)
-        # print(x2, y2)
-        # print(x3, y3)
-        # print(x4, y4)
-
-        ax1, ay1 = kesisim(x1, y1, x2, y2, x3, y3, x4, y4)
-        ax2, ay2 = kesisim(x3, y3, x4, y4, x5, y5, x6, y6)
-        ax3, ay3 = kesisim(x5, y5, x6, y6, x1, y1, x2, y2)
-
-        ax, ay = (ax1 + ax2 + ax3)/3, (ay1 + ay2 + ay3)/3
-
-        if ax > 100000 or ay > 100000:
+        #* Find middle corner
+        axis1, center_y1 = intersection(x1, y1, x2, y2, x3, y3, x4, y4)
+        axis2, center_y2 = intersection(x3, y3, x4, y4, x5, y5, x6, y6)
+        center_x3, center_y3 = intersection(x5, y5, x6, y6, x1, y1, x2, y2)
+        center_x, center_y = (axis1 + axis2 + center_x3)/3, (center_y1 + center_y2 + center_y3)/3
+        center = int(center_x), int(center_y)
+        if center_x > 100000 or center_y > 100000:
             continue
-
-        center = int(ax), int(ay)
-        if DEBUG and 0 < ax < 1000 and 0 < ay < 1000:
+        if DEBUG and 0 < center_x < 1000 and 0 < center_y < 1000:
             canny = cv.circle(canny, center, 5, (255, 255, 0), -1)
         
-        canny_d = cv.dilate(canny, np.ones((10, 10), np.uint8))
-
-        dx, dy = p2[0][0] - p1[0][0], p2[0][1] - p1[0][1]
+        #* Find corners near middle corner
+        dilated_edges = cv.dilate(canny, np.ones((10, 10), np.uint8))
+        dx, dy = big_circle_points[0][0] - little_circle_points[0][0], big_circle_points[0][1] - little_circle_points[0][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx1, ky1 = ax + dx*200, ay + dy*200
-        while 0 < kx1 < W and 0 < ky1 < H:
-            if canny_d[int(ky1), int(kx1)].all() == 0:
+        corner1_x, corner1_y = center_x + dx*200, center_y + dy*200
+        while 0 < corner1_x < W and 0 < corner1_y < H:
+            if dilated_edges[int(corner1_y), int(corner1_x)].all() == 0:
                 break
-            kx1 += dx
-            ky1 += dy
-        kx1 -= 5*dx
-        ky1 -= 5*dy
+            corner1_x += dx
+            corner1_y += dy
+        corner1_x -= 5*dx
+        corner1_y -= 5*dy
 
-        dx, dy = p2[1][0] - p1[1][0], p2[1][1] - p1[1][1]
+        dx, dy = big_circle_points[1][0] - little_circle_points[1][0], big_circle_points[1][1] - little_circle_points[1][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx2, ky2 = ax + dx*200, ay + dy*200
-        canny = cv.circle(canny, (int(kx2), int(ky2)), 10, (0, 0, 255))
-        while 0 < kx2 < W and 0 < ky2 < H:
-            if canny_d[int(ky2), int(kx2)].all() == 0:
+        corner2_x, corner2_y = center_x + dx*200, center_y + dy*200
+        canny = cv.circle(canny, (int(corner2_x), int(corner2_y)), 10, (0, 0, 255))
+        while 0 < corner2_x < W and 0 < corner2_y < H:
+            if dilated_edges[int(corner2_y), int(corner2_x)].all() == 0:
                 break
-            kx2 += dx
-            ky2 += dy
-        kx2 -= 5*dx
-        ky2 -= 5*dy
+            corner2_x += dx
+            corner2_y += dy
+        corner2_x -= 5*dx
+        corner2_y -= 5*dy
 
-        dx, dy = p2[2][0] - p1[2][0], p2[2][1] - p1[2][1]
+        dx, dy = big_circle_points[2][0] - little_circle_points[2][0], big_circle_points[2][1] - little_circle_points[2][1]
         dx, dy = dx/length((dx, dy)), dy/length((dx, dy))
-        kx3, ky3 = ax + dx*200, ay + dy*200
-        while 0 < kx3 < W and 0 < ky3 < H:
-            if canny_d[int(ky3), int(kx3)].all() == 0:
+        corner3_x, corner3_y = center_x + dx*200, center_y + dy*200
+        while 0 < corner3_x < W and 0 < corner3_y < H:
+            if dilated_edges[int(corner3_y), int(corner3_x)].all() == 0:
                 break
-            kx3 += dx
-            ky3 += dy
-        kx3 -= 5*dx
-        ky3 -= 5*dy
+            corner3_x += dx
+            corner3_y += dy
+        corner3_x -= 5*dx
+        corner3_y -= 5*dy
 
-        k1 = (int(kx1), int(ky1))
-        k2 = (int(kx2), int(ky2))
-        k3 = (int(kx3), int(ky3))
+        corner1 = (int(corner1_x), int(corner1_y))
+        corner2 = (int(corner2_x), int(corner2_y))
+        corner3 = (int(corner3_x), int(corner3_y))
 
         if DEBUG:
-            canny = cv.circle(canny, k1, 10, (0, 0, 255))
-            canny = cv.circle(canny, k2, 10, (0, 0, 255))
-            canny = cv.circle(canny, k3, 10, (0, 0, 255))
+            canny = cv.circle(canny, corner1, 10, (0, 0, 255))
+            canny = cv.circle(canny, corner2, 10, (0, 0, 255))
+            canny = cv.circle(canny, corner3, 10, (0, 0, 255))
 
-        kk1 = topla(cikar(k1, center), k2)
-        kk2 = topla(cikar(k2, center), k3)
-        kk3 = topla(cikar(k3, center), k1)
+        #* Estimate other corners
+        far_corner1 = plus(minus(corner1, center), corner2)
+        far_corner2 = plus(minus(corner2, center), corner3)
+        far_corner3 = plus(minus(corner3, center), corner1)
 
-        kk1 = cikar(kk1, carp(0.13, cikar(kk1, center)))
-        kk2 = cikar(kk2, carp(0.13, cikar(kk2, center)))
-        kk3 = cikar(kk3, carp(0.13, cikar(kk3, center)))
-        kk1 = (int(kk1[0]), int(kk1[1]))
-        kk2 = (int(kk2[0]), int(kk2[1]))
-        kk3 = (int(kk3[0]), int(kk3[1]))
+        far_corner1 = minus(far_corner1, times(0.13, minus(far_corner1, center)))
+        far_corner2 = minus(far_corner2, times(0.13, minus(far_corner2, center)))
+        far_corner3 = minus(far_corner3, times(0.13, minus(far_corner3, center)))
+        far_corner1 = (int(far_corner1[0]), int(far_corner1[1]))
+        far_corner2 = (int(far_corner2[0]), int(far_corner2[1]))
+        far_corner3 = (int(far_corner3[0]), int(far_corner3[1]))
         
-        calculated_area = area([k1, kk1, k2, kk2, k3, kk3])
-
-        error = abs(calculated_area - alan)/alan
-
-        olmadi = False
-
+        #* Check if calculated area and skeleton area matches
+        unsuccessful = False
+        calculated_area = area([corner1, far_corner1, corner2, far_corner2, corner3, far_corner3])
+        error = abs(calculated_area - cube_area)/cube_area
         if error < 0.1:
             if DEBUG:
-                canny = cv.circle(canny, kk1, 10, (0, 0, 255))
-                canny = cv.circle(canny, kk2, 10, (0, 0, 255))
-                canny = cv.circle(canny, kk3, 10, (0, 0, 255))
+                canny = cv.circle(canny, far_corner1, 10, (0, 0, 255))
+                canny = cv.circle(canny, far_corner2, 10, (0, 0, 255))
+                canny = cv.circle(canny, far_corner3, 10, (0, 0, 255))
 
-                scanning_areas = cv.circle(scanning_areas, k1, 10, (255, 255, 255))
-                scanning_areas = cv.circle(scanning_areas, k2, 10, (255, 255, 255))
-                scanning_areas = cv.circle(scanning_areas, k3, 10, (255, 255, 255))
-                scanning_areas = cv.circle(scanning_areas, kk1, 10, (255, 255, 255))
-                scanning_areas = cv.circle(scanning_areas, kk2, 10, (255, 255, 255))
-                scanning_areas = cv.circle(scanning_areas, kk3, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, corner1, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, corner2, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, corner3, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, far_corner1, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, far_corner2, 10, (255, 255, 255))
+                scanning_areas = cv.circle(scanning_areas, far_corner3, 10, (255, 255, 255))
 
-            #* Faces
+            #* Divide faces and extract colors
             read = []
             for faces in range(3):
                 if faces == 0:
-                    ax1 = cikar(k1, center)
-                    ax2 = cikar(k2, center)
+                    axis1 = minus(corner1, center)
+                    axis2 = minus(corner2, center)
                 elif faces == 1:
-                    ax1 = cikar(k2, center)
-                    ax2 = cikar(k3, center)
+                    axis1 = minus(corner2, center)
+                    axis2 = minus(corner3, center)
                 else:
-                    ax1 = cikar(k3, center)
-                    ax2 = cikar(k1, center)
-                # ax1 = topla(ax1, carp(0.16, cikar(ax1, center)))
-                # ax2 = topla(ax2, carp(0.16, cikar(ax2, center)))
+                    axis1 = minus(corner3, center)
+                    axis2 = minus(corner1, center)
+
                 for i in range(3):
                     for j in range(3):
-                        b1 = topla(center, topla(carp( i   /3, ax1), carp( j   /3, ax2)))
-                        b2 = topla(center, topla(carp((i+1)/3, ax1), carp( j   /3, ax2)))
-                        b3 = topla(center, topla(carp( i   /3, ax1), carp((j+1)/3, ax2)))
-                        b4 = topla(center, topla(carp((i+1)/3, ax1), carp((j+1)/3, ax2)))
+                        piece_corner1 = plus(center, plus(times( i   /3, axis1), times( j   /3, axis2)))
+                        piece_corner2 = plus(center, plus(times((i+1)/3, axis1), times( j   /3, axis2)))
+                        piece_corner3 = plus(center, plus(times( i   /3, axis1), times((j+1)/3, axis2)))
+                        piece_corner4 = plus(center, plus(times((i+1)/3, axis1), times((j+1)/3, axis2)))
 
-                        b1 = cikar(b1, carp(0.13*min(i  , j  )/3, cikar(b1, center)))
-                        b2 = cikar(b2, carp(0.13*min(i+1, j  )/3, cikar(b2, center)))
-                        b3 = cikar(b3, carp(0.13*min(i  , j+1)/3, cikar(b3, center)))
-                        b4 = cikar(b4, carp(0.13*min(i+1, j+1)/3, cikar(b4, center)))
+                        piece_corner1 = minus(piece_corner1, times(0.13*min(i  , j  )/3, minus(piece_corner1, center)))
+                        piece_corner2 = minus(piece_corner2, times(0.13*min(i+1, j  )/3, minus(piece_corner2, center)))
+                        piece_corner3 = minus(piece_corner3, times(0.13*min(i  , j+1)/3, minus(piece_corner3, center)))
+                        piece_corner4 = minus(piece_corner4, times(0.13*min(i+1, j+1)/3, minus(piece_corner4, center)))
 
-                        mask = np.zeros((canny.shape[0], canny.shape[1]), np.uint8)
-
-                        # mask = cv.cvtColor(mask, cv.COLOR_BGR2GRAY)
-
+                        piece_mask = np.zeros((canny.shape[0], canny.shape[1]), np.uint8)
                         pts = np.array([
-                            [b1[0], b1[1]], 
-                            [b2[0], b2[1]], 
-                            [b4[0], b4[1]],
-                            [b3[0], b3[1]]
+                            [piece_corner1[0], piece_corner1[1]], 
+                            [piece_corner2[0], piece_corner2[1]], 
+                            [piece_corner4[0], piece_corner4[1]],
+                            [piece_corner3[0], piece_corner3[1]]
                             ], np.int32)
-
                         pts.reshape((-1, 1, 2))
-                        # color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-                        mask = cv.fillPoly(mask, [pts], (255, 255, 255))
+                        piece_mask = cv.fillPoly(piece_mask, [pts], (255, 255, 255))
+                        piece_mask = cv.erode(piece_mask, np.ones((35,35), np.uint8)) # erode to prevent little misplacements
 
-                        mask = cv.erode(mask, np.ones((35,35), np.uint8) )
+                        scanning_areas = cv.bitwise_or(scanning_areas, piece_mask)
 
-                        scanning_areas = cv.bitwise_or(scanning_areas, mask)
-
-                        # edge_check = cv.mean(canny, mask)
+                        # uncomment for higher accuracy but hard match
+                        # edge_check = cv.mean(canny, piece_mask)
                         # if edge_check[0] > 0:
                         #     olmadi = True
 
-                        alan = cv.mean(mask)
-                        if alan[0] < 0.005:
-                            olmadi = True
+                        #* If color picking area is so small, retreat
+                        cube_area = cv.mean(piece_mask)
+                        if cube_area[0] < 0.005:
+                            unsuccessful = True
 
-                        col = cv.mean(raw, mask)
-                        # col_im = np.zeros((1, 1, 3), np.uint8)
-                        # col_im[0][0] = [col[0], col[1], col[2]]
-                        # col_im = cv.cvtColor(col_im, cv.COLOR_BGR2HSV)
-                        # col_im[0][0][2] = 255
-                        # col_im = cv.cvtColor(col_im, cv.COLOR_HSV2BGR)
-                        # col = col_im[0][0][0], col_im[0][0][1], col_im[0][0][2]
+                        read_color = cv.mean(raw, piece_mask)
                         if DEBUG:
-                            canny = cv.fillPoly(canny, [pts], (int(col[0]), int(col[1]), int(col[2])))
-
-                        read.append((col[0], col[1], col[2]))
+                            canny = cv.fillPoly(canny, [pts], (int(read_color[0]), int(read_color[1]), int(read_color[2])))
+                        read.append((read_color[0], read_color[1], read_color[2]))
             if DEBUG:
-                # cv.imshow('canny', canny)
                 cv.imshow('scanning_areas', scanning_areas)
 
-            # cv.waitKey()
-            # exit(0)
-
-            if olmadi:
+            if unsuccessful:
                 continue
 
             if not firstRead:
                 firstRead = read
                 firstDone = True
                 if DEBUG:
-                    cv.imshow('ilk okuma', canny)
-                    cv.imshow('ilk okuma raw', raw)
+                    cv.imshow('first read', canny)
+                    cv.imshow('first read raw', raw)
             else:
-                fark = 0
+                difference = 0
                 for i in range(len(read)):
                     for j in range(3):
-                        fark += (firstRead[i][j] - read[i][j])**2
-                if fark > 270000:
+                        difference += (firstRead[i][j] - read[i][j])**2
+                if difference > 270000:
                     secondRead = read
-                    secondDone = True
                     reads = firstRead + secondRead
                     if DEBUG:
                         cv.imshow('ikinci okuma', canny)
                         cv.imshow('ikinci okuma raw', raw)
                         print(reads)
 
-                    kumeler = [[], [], [], [], [], []]
+                    #* Determine which color which
+                    color_groups = [[], [], [], [], [], []]
                     reads = turnHSV(reads)
+
+                    # First 9 least saturated color is white
                     reads = reads[reads[:,1].argsort()]
                     for i in range(9):
-                        kumeler[0].append(int(reads[i][3]))
+                        color_groups[0].append(int(reads[i][3]))
                     reads = reads[9:]
 
+                    # Other colors are determined according to their hue value
                     reads = reads[reads[:,0].argsort()]
                     for j in range(1, 6):
                         for i in range(9):
-                            kumeler[j].append(int(reads[(j-1)*9 + i][3]))
+                            color_groups[j].append(int(reads[(j-1)*9 + i][3]))
 
-                    nerede = []
+                    where = []
                     for i in range(54):
-                        nerede.append(-1)
+                        where.append(-1)
                     for i in range(6):
                         for j in range(9):
-                            nerede[kumeler[i][j]] = i
+                            where[color_groups[i][j]] = i
 
-                    kup = []
+                    cube_list = []
                     for i in range(54):
-                        kup.append(-1)
+                        cube_list.append(-1)
 
-                    doldur(kup, nerede[0:9], nerede[13])
-                    doldur(kup, nerede[9:18], nerede[22])
-                    doldur(kup, nerede[18:27], nerede[4])
-                    doldur(kup, nerede[27:36], nerede[40])
-                    doldur(kup, nerede[36:45], nerede[49])
-                    doldur(kup, nerede[45:54], nerede[31])
+                    #* Find places of pieces and fill
+                    fill(cube_list, where[0:9], where[13])
+                    fill(cube_list, where[9:18], where[22])
+                    fill(cube_list, where[18:27], where[4])
+                    fill(cube_list, where[27:36], where[40])
+                    fill(cube_list, where[36:45], where[49])
+                    fill(cube_list, where[45:54], where[31])
 
-
-                    enson = np.zeros((H, W, 3), np.uint8)
-                    
+                    #* Create result image
+                    result = np.zeros((H, W, 3), np.uint8)
                     seperatorThickness = 2
                     for i in range(3):
                         for j in range(3):
                             px = 10 + 150 + 10
                             py = 10
-                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[i+j*3]), -1)
-                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(cube_list[i+j*3]), -1)
+                            result = cv.rectangle(result, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
                     for i in range(3):
                         for j in range(3):
                             px = 10
                             py = 10 + 150 + 10
-                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[9+i+j*3]), -1)
-                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(cube_list[9+i+j*3]), -1)
+                            result = cv.rectangle(result, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
                     for i in range(3):
                         for j in range(3):
                             px = 10 + 150 + 10
                             py = 10 + 150 + 10
-                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[18+i+j*3]), -1)
-                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(cube_list[18+i+j*3]), -1)
+                            result = cv.rectangle(result, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
                     for i in range(3):
                         for j in range(3):
                             px = 10 + 150 + 10 + 150 + 10
                             py = 10 + 150 + 10
-                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[27+i+j*3]), -1)
-                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(cube_list[27+i+j*3]), -1)
+                            result = cv.rectangle(result, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
                     for i in range(3):
                         for j in range(3):
                             px = 10 + 150 + 10 + 150 + 10 + 150 + 10
                             py = 10 + 150 + 10
-                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[36+i+j*3]), -1)
-                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(cube_list[36+i+j*3]), -1)
+                            result = cv.rectangle(result, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
                     for i in range(3):
                         for j in range(3):
                             px = 10 + 150 + 10
                             py = 10 + 150 + 10 + 150 + 10
-                            enson = cv.rectangle(enson, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(kup[45+i+j*3]), -1)
-                            enson = cv.rectangle(enson, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
-                            enson = cv.rectangle(enson, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + i*50, py + j*50), (px + (i+1)*50, py + (j+1)*50), getcolor(cube_list[45+i+j*3]), -1)
+                            result = cv.rectangle(result, (px, py), (px + 100, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px + 50, py), (px + 150, py + 150), (0, 0, 0), seperatorThickness)
+                            result = cv.rectangle(result, (px, py + 50), (px + 150, py + 100), (0, 0, 0), seperatorThickness)
 
-                    altered = kup[0:9] + kup[27:36] + kup[18:27] + kup[45:54] + kup[9:18] + kup[36:45]
-                    # print(altered)
-                    kociemba_text = str(altered).replace('[', '').replace(']', '').replace(',', '').replace(' ', '')
+                    kociemba_input_style = cube_list[0:9] + cube_list[27:36] + cube_list[18:27] + cube_list[45:54] + cube_list[9:18] + cube_list[36:45]
+                    kociemba_text = str(kociemba_input_style).replace('[', '').replace(']', '').replace(',', '').replace(' ', '')
                     kociemba_text = kociemba_text.replace('0', 'U')
                     kociemba_text = kociemba_text.replace('1', 'B')
                     kociemba_text = kociemba_text.replace('2', 'F')
                     kociemba_text = kociemba_text.replace('3', 'D')
                     kociemba_text = kociemba_text.replace('4', 'R')
                     kociemba_text = kociemba_text.replace('5', 'L')
-                    # print(kociemba_text)
                     solution = ""
                     try:
                         solution = kociemba.solve(kociemba_text)
                     except:
                         solution = "Sorry, this cube cannot be solved. Try again"
                     
-                    enson = cv.putText(enson, "White on top, Orange in front", (10, 520), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
-                    enson = cv.putText(enson, solution, (10, 560), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
-                    enson = cv.putText(enson, "R to retry, Q to quit", (10, 600), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+                    result = cv.putText(result, "White on top, Orange in front", (10, 520), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+                    result = cv.putText(result, solution, (10, 560), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
+                    result = cv.putText(result, "R to retry, Q to quit", (10, 600), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255))
 
                     dx = (W - 650) // 6
                     dy = 500 // 4
@@ -765,22 +714,21 @@ while True:
                                     color = color_red[0], color_red[1], color_red[2]
                                 elif solution_array[number][0] == 'D':
                                     color = color_yellow[0], color_yellow[1], color_yellow[2]
-                                enson = cv.rectangle(enson, (center[0] - int(minax*0.2), center[1] - int(minax*0.2)), (center[0] + int(minax*0.2), center[1] + int(minax*0.2)), color, -1)
+                                result = cv.rectangle(result, (center[0] - int(minax*0.2), center[1] - int(minax*0.2)), (center[0] + int(minax*0.2), center[1] + int(minax*0.2)), color, -1)
                                 if len(solution_array[number]) == 1:
-                                    enson = cv.ellipse(enson, center, (int(minax*0.4), int(minax*0.4)), 0, -90, 0, (0, 255, 0), 3)
-                                    enson = cv.line(enson, (center[0] + int(minax*0.4), center[1]), (center[0] + int(minax*0.4) + int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
-                                    enson = cv.line(enson, (center[0] + int(minax*0.4), center[1]), (center[0] + int(minax*0.4) - int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                    result = cv.ellipse(result, center, (int(minax*0.4), int(minax*0.4)), 0, -90, 0, (0, 255, 0), 3)
+                                    result = cv.line(result, (center[0] + int(minax*0.4), center[1]), (center[0] + int(minax*0.4) + int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                    result = cv.line(result, (center[0] + int(minax*0.4), center[1]), (center[0] + int(minax*0.4) - int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
                                 elif solution_array[number][1] == "'":
-                                    enson = cv.ellipse(enson, center, (int(minax*0.4), int(minax*0.4)), 0, -90, -180, (0, 255, 0), 3)
-                                    enson = cv.line(enson, (center[0] - int(minax*0.4), center[1]), (center[0] - int(minax*0.4) + int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
-                                    enson = cv.line(enson, (center[0] - int(minax*0.4), center[1]), (center[0] - int(minax*0.4) - int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                    result = cv.ellipse(result, center, (int(minax*0.4), int(minax*0.4)), 0, -90, -180, (0, 255, 0), 3)
+                                    result = cv.line(result, (center[0] - int(minax*0.4), center[1]), (center[0] - int(minax*0.4) + int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
+                                    result = cv.line(result, (center[0] - int(minax*0.4), center[1]), (center[0] - int(minax*0.4) - int(minax*0.05), center[1] - int(minax*0.05)), (0, 255, 0), 3)
                                 else:
-                                    enson = cv.ellipse(enson, center, (int(minax*0.4), int(minax*0.4)), 0, -90, 90, (0, 255, 0), 3)
-                                    enson = cv.line(enson, (center[0], center[1] + int(minax*0.4)), (center[0] + int(minax*0.05), center[1] + int(minax*0.4) - int(minax*0.05)), (0, 255, 0), 3)
-                                    enson = cv.line(enson, (center[0], center[1] + int(minax*0.4)), (center[0] + int(minax*0.05), center[1] + int(minax*0.4) + int(minax*0.05)), (0, 255, 0), 3)
+                                    result = cv.ellipse(result, center, (int(minax*0.4), int(minax*0.4)), 0, -90, 90, (0, 255, 0), 3)
+                                    result = cv.line(result, (center[0], center[1] + int(minax*0.4)), (center[0] + int(minax*0.05), center[1] + int(minax*0.4) - int(minax*0.05)), (0, 255, 0), 3)
+                                    result = cv.line(result, (center[0], center[1] + int(minax*0.4)), (center[0] + int(minax*0.05), center[1] + int(minax*0.4) + int(minax*0.05)), (0, 255, 0), 3)
 
-
-                    cv.imshow('raw', enson)
+                    cv.imshow("Rubik's Cube Solver", result)
                     while True:
                         option = cv.waitKey() & 0xff
                         if option == ord('r') or option == ord('R'):
@@ -791,18 +739,10 @@ while True:
                         elif option == ord('q') or option == ord('Q'):
                             exit(0)
 
-
-        # cv.imshow('canny dilated', canny_d)
-
-
-        # kose0 = topla((ax, ay), carp(200/length(cikar(p2[0], p1[0])), cikar(p2[0], p1[0])))
-        # kose0 = int(kose0[0]), int(kose0[1])
-        # canny = cv.circle(canny, kose0, 10, (0, 0, 255))
-        
     if DEBUG:
         cv.imshow('canny', canny)
     else:
-        cv.imshow('raw', raw)    
+        cv.imshow("Rubik's Cube Solver", raw)    
 
     key = cv.waitKey(20)
     if key == ord('q') or key == ord('Q'):
