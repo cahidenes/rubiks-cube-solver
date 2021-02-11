@@ -6,6 +6,10 @@ This repository implements only recognizing part. Solution part is imported [(ko
 - Aimed for stickerless cubes. Occasionally works for other cubes, worth trying.
 - **Key Feature:** Recognizes cube from only two opposite corners, no specific order needed. Easy and fast.
 
+## Demo
+
+![Demo](demo.gif)
+
 ## Pip Installs
     pip install opencv-python
     pip install kociemba
