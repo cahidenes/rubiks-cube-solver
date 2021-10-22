@@ -8,7 +8,7 @@ This repository implements only recognizing part. Solution part is imported [(ko
 
 ## Demo
 
-![Demo](demo.gif)
+![Demo](https://github.com/cahidenes/visuals/blob/main/rubiks-cube-solver.gif?raw=true)
 
 ## Pip Installs
     pip install opencv-python
